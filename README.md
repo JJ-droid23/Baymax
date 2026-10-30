@@ -1,3 +1,3 @@
-# BeMax
+# BayMax
 
 Kekko puzza
