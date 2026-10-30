@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accanto – demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      flex-wrap: wrap;
+      padding: 30px;
+      background: radial-gradient(ellipse at top, #22303a, #14171c 60%);
+      font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ---------- telefono ---------- */
+    .colonna { display: flex; flex-direction: column; align-items: center; }
+    .etichetta {
+      color: #94a3b8; font-size: 14px; letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+    .telefono {
+      width: 340px; height: 700px;
+      background: #0b0b0d; border-radius: 50px; padding: 12px;
+      box-shadow: 0 0 0 2px #2a2d33, 0 30px 80px rgba(0,0,0,.5);
+    }
+    .schermo {
+      position: relative; width: 100%; height: 100%;
+      border-radius: 40px; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .barra-stato {
+      display: flex; justify-content: space-between;
+      padding: 16px 28px 8px; font-size: 13px; font-weight: 600;
+    }
+    .scheda {
+      background: #fff; border-radius: 20px; margin: 0 16px; padding: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    }
+    .bottone-grande {
+      width: 100%; border: 0; border-radius: 16px; padding: 14px;
+      font-size: 20px; font-weight: 700;
+    }
+    .verde { background: #16a34a; color: #fff; }
+    .verde:disabled { background: #bbf7d0; color: #166534; }
+    .bianco { background: #fff; color: #0f172a; }
+    .blu { background: #1d4ed8; color: #fff; }
+
+    /* ---------- telefono dell'anziana ---------- */
+    .anziana { background: #fbf7ef; color: #1c1917; }
+    .orologio { text-align: center; font-size: 76px; font-weight: 800; margin-top: 14px; }
+    .data { text-align: center; font-size: 22px; font-weight: 600; margin-bottom: 16px; }
+    .promemoria-titolo { font-size: 22px; font-weight: 800; }
+    .promemoria-testo { font-size: 18px; color: #44403c; margin: 4px 0 14px; }
+    .sensori { display: flex; gap: 12px; margin: 14px 16px 0; align-items: center; }
+    .camera {
+      position: relative; width: 120px; height: 90px; flex-shrink: 0;
+      border-radius: 14px; overflow: hidden; background: #292524;
+    }
+    .camera video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    .camera-spenta {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      color: #d6d3d1; font-size: 12px; text-align: center; padding: 6px;
+    }
+    .barra-gesto { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: rgba(0,0,0,.35); }
+    .barra-gesto div { height: 100%; width: 0; background: #facc15; }
+    .info-sensori { display: flex; flex-direction: column; gap: 3px; min-width: 0; font-size: 13px; color: #44403c; }
+    .info-sensori b { font-size: 12px; color: #57534e; margin-top: 4px; }
+    .bottone-sos {
+      margin: auto 16px 24px; height: 100px; border: 0; border-radius: 28px;
+      background: #dc2626; color: #fff; font-size: 46px; font-weight: 900;
+      letter-spacing: 4px; box-shadow: 0 8px 0 #991b1b;
+    }
+    .bottone-sos:active { transform: translateY(4px); box-shadow: 0 4px 0 #991b1b; }
+    .avviso-anziana {
+      position: absolute; inset: 0; z-index: 4;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 30px; text-align: center; color: #fff; background: #dc2626;
+    }
+    .avviso-anziana.calmo { background: #0f766e; }
+    .avviso-icona { font-size: 70px; }
+    .avviso-titolo { font-size: 32px; font-weight: 800; line-height: 1.1; }
+    .avviso-testo { font-size: 21px; }
+
+    /* ---------- app del familiare ---------- */
+    .familiare { background: #f5f7f8; color: #0f172a; }
+    .intestazione { padding: 6px 22px 14px; }
+    .logo { font-size: 28px; font-weight: 800; color: #0f766e; }
+    .saluto { color: #64748b; font-size: 15px; }
+    .persona { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: #ccfbf1; color: #0f766e;
+      display: grid; place-items: center; font-weight: 800; font-size: 20px;
+    }
+    .nome { font-weight: 700; font-size: 17px; }
+    .dettaglio { color: #64748b; font-size: 13px; }
+    .stato {
+      margin-left: auto; padding: 6px 10px; border-radius: 999px;
+      background: #dcfce7; color: #166534; font-size: 12px; font-weight: 800;
+    }
+    .stato.emergenza { background: #dc2626; color: #fff; }
+    .stato.attesa { background: #fef3c7; color: #92400e; }
+    .titolo-sezione {
+      margin: 20px 22px 8px; font-size: 13px; font-weight: 800;
+      color: #64748b; text-transform: uppercase; letter-spacing: 1px;
+    }
+    #storico { overflow-y: auto; flex: 1; padding-bottom: 16px; }
+    .evento {
+      display: flex; gap: 10px; align-items: center;
+      background: #fff; border-radius: 14px; margin: 0 16px 8px; padding: 10px 12px;
+    }
+    .evento.rosso { background: #fee2e2; }
+    .evento-icona { font-size: 22px; }
+    .evento-titolo { font-weight: 700; font-size: 14px; }
+    .evento-ora { margin-left: auto; font-size: 12px; color: #64748b; }
+    .notifica {
+      position: absolute; z-index: 6; left: 10px; right: 10px; top: 10px;
+      background: rgba(255,255,255,.96); border-radius: 18px; padding: 12px 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+      transform: translateY(-140%); transition: transform .35s;
+    }
+    .notifica.visibile { transform: translateY(0); }
+    .notifica-app { font-size: 11px; font-weight: 700; color: #64748b; }
+    .notifica-titolo { font-weight: 800; font-size: 15px; }
+    .notifica-testo { font-size: 13px; color: #334155; }
+    .allarme {
+      position: absolute; inset: 0; z-index: 5;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; padding: 28px; text-align: center; color: #fff;
+      background: linear-gradient(#ef4444, #991b1b);
+    }
+    .cerchio {
+      width: 90px; height: 90px; border-radius: 50%; background: #fff; color: #dc2626;
+      display: grid; place-items: center; font-size: 54px; font-weight: 900;
+      animation: pulsa 1.2s infinite; margin-bottom: 8px;
+    }
+    @keyframes pulsa {
+      0% { box-shadow: 0 0 0 0 rgba(255,255,255,.7); }
+      100% { box-shadow: 0 0 0 30px rgba(255,255,255,0); }
+    }
+    .allarme-titolo { font-size: 27px; font-weight: 800; line-height: 1.15; }
+    .allarme-fonte { font-size: 16px; }
+    .allarme-ora { font-size: 14px; opacity: .8; }
+    .allarme-bottoni { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 16px; }
+
+    /* ---------- schermata iniziale ---------- */
+    .avvio {
+      position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
+      background: rgba(10,12,16,.93); color: #cbd5e1; text-align: center;
+    }
+    .avvio .logo { font-size: 44px; }
+    .avvio button { width: auto; padding: 18px 36px; font-size: 24px; margin: 18px 0 8px; }
+  </style>
+</head>
+<body>
+
+  <!-- ================= TELEFONO DELL'ANZIANA ================= -->
+  <div class="colonna">
+    <div class="etichetta">Telefono di Anna</div>
+    <div class="telefono">
+      <div class="schermo anziana">
+        <div class="barra-stato"><span class="ora-piccola"></span><span>●●● ▮</span></div>
+        <div class="orologio" id="orologio">--:--</div>
+        <div class="data" id="data"></div>
+
+        <div class="scheda">
+          <div class="promemoria-titolo">💊 Ore 15:00</div>
+          <div class="promemoria-testo">Cardioaspirina · 1 compressa</div>
+          <button class="bottone-grande verde" id="bottone-preso">✓ L'ho presa</button>
+        </div>
+
+        <div class="sensori">
+          <div class="camera">
+            <video id="video" playsinline muted></video>
+            <div class="camera-spenta" id="camera-spenta">Fotocamera spenta</div>
+            <div class="barra-gesto"><div id="barra-gesto"></div></div>
+          </div>
+          <div class="info-sensori">
+            <b>GESTI</b>
+            <span id="testo-gesti">In attesa…</span>
+            <b>VOCE</b>
+            <span id="testo-voce">Di' «aiuto» per chiamare</span>
+          </div>
+        </div>
+
+        <button class="bottone-sos" id="bottone-sos">SOS</button>
+
+        <div class="avviso-anziana" id="avviso-anziana" hidden>
+          <div class="avviso-icona" id="avviso-icona"></div>
+          <div class="avviso-titolo" id="avviso-titolo"></div>
+          <div class="avviso-testo" id="avviso-testo"></div>
+          <button class="bottone-grande bianco" id="chiudi-avviso">Chiudi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= APP DEL FAMILIARE ================= -->
+  <div class="colonna">
+    <div class="etichetta">App di Marco (figlio)</div>
+    <div class="telefono">
+      <div class="schermo familiare">
+        <div class="barra-stato"><span class="ora-piccola"></span><span>●●● ▮</span></div>
+        <div class="intestazione">
+          <div class="logo">◉ Accanto</div>
+          <div class="saluto">Ciao Marco</div>
+        </div>
+
+        <div class="scheda persona">
+          <div class="avatar">A</div>
+          <div>
+            <div class="nome">Anna</div>
+            <div class="dettaglio">Casa · sensori attivi</div>
+          </div>
+          <div class="stato" id="stato">Tutto ok</div>
+        </div>
+
+        <div class="titolo-sezione">Oggi</div>
+        <div id="storico"></div>
+
+        <div class="notifica" id="notifica">
+          <div class="notifica-app">ACCANTO · adesso</div>
+          <div class="notifica-titolo" id="notifica-titolo"></div>
+          <div class="notifica-testo" id="notifica-testo"></div>
+        </div>
+
+        <div class="allarme" id="allarme" hidden>
+          <div class="cerchio">!</div>
+          <div class="allarme-titolo">Anna ha bisogno di aiuto</div>
+          <div class="allarme-fonte" id="allarme-fonte"></div>
+          <div class="allarme-ora" id="allarme-ora"></div>
+          <div class="allarme-bottoni" id="allarme-bottoni">
+            <button class="bottone-grande bianco" id="bottone-arrivo">Sto arrivando</button>
+            <button class="bottone-grande blu" id="bottone-chiama">📞 Chiama</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SCHERMATA INIZIALE ================= -->
+  <div class="avvio" id="avvio">
+    <div>
+      <div class="logo">◉ Accanto</div>
+      <p>Assistenza discreta per chi vive da solo.</p>
+      <button class="bottone-grande verde" id="bottone-avvio">▶ Avvia demo</button>
+      <p style="font-size:14px">Consenti fotocamera e microfono quando Chrome lo chiede.</p>
+    </div>
+  </div>
+
+  <script src="voce.js"></script>
+  <script type="module" src="gesti.js"></script>
+  <script>
+    const ANZIANA = 'Anna';
+    const FAMILIARE = 'Marco';
+    const $ = (id) => document.getElementById(id);
+
+    // ---------- orologio ----------
+    function aggiornaOra() {
+      const adesso = new Date();
+      const ora = adesso.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      let data = adesso.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+      $('orologio').textContent = ora;
+      $('data').textContent = data.charAt(0).toUpperCase() + data.slice(1);
+      document.querySelectorAll('.ora-piccola').forEach((el) => el.textContent = ora);
+    }
+    aggiornaOra();
+    setInterval(aggiornaOra, 1000);
+
+    // ---------- suoni (generati dal browser, nessun file) ----------
+    let audio = null;
+    let fermaSirena = () => {};
+    function sbloccaAudio() {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      audio.resume();
+    }
+    function sirena() {
+      if (!audio) return () => {};
+      const osc = audio.createOscillator();
+      const volume = audio.createGain();
+      osc.type = 'square';
+      volume.gain.value = 0.06;
+      osc.connect(volume).connect(audio.destination);
+      const t = audio.currentTime;
+      for (let i = 0; i < 120; i++) osc.frequency.setValueAtTime(i % 2 ? 640 : 900, t + i * 0.5);
+      osc.start(t);
+      osc.stop(t + 60);
+      return () => { try { osc.stop(); } catch (e) {} };
+    }
+    function ding() {
+      if (!audio) return;
+      [880, 1320].forEach((frequenza, i) => {
+        const osc = audio.createOscillator();
+        const volume = audio.createGain();
+        const t = audio.currentTime + i * 0.16;
+        osc.frequency.value = frequenza;
+        volume.gain.setValueAtTime(0.0001, t);
+        volume.gain.exponentialRampToValueAtTime(0.15, t + 0.02);
+        volume.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+        osc.connect(volume).connect(audio.destination);
+        osc.start(t);
+        osc.stop(t + 0.32);
+      });
+    }
+
+    // ---------- il telefono di Anna parla ----------
+    // Attenzione: non far mai dire "aiuto", altrimenti riparte l'allarme.
+    function parla(frase) {
+      if (!('speechSynthesis' in window)) return;
+      const voce = new SpeechSynthesisUtterance(frase);
+      voce.lang = 'it-IT';
+      window.staParlando = true;
+      voce.onend = () => setTimeout(() => { window.staParlando = false; }, 600);
+      speechSynthesis.cancel();
+      speechSynthesis.speak(voce);
+    }
+
+    // ---------- funzioni di supporto ----------
+    function avvisoAnziana(icona, titolo, testo, calmo) {
+      $('avviso-icona').textContent = icona;
+      $('avviso-titolo').textContent = titolo;
+      $('avviso-testo').textContent = testo;
+      $('avviso-anziana').classList.toggle('calmo', calmo);
+      $('avviso-anziana').hidden = false;
+    }
+    function aggiungiEvento(icona, titolo, dettaglio, rosso) {
+      const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const riga = document.createElement('div');
+      riga.className = 'evento' + (rosso ? ' rosso' : '');
+      riga.innerHTML = '<span class="evento-icona"></span><div><div class="evento-titolo"></div><div class="dettaglio"></div></div><span class="evento-ora"></span>';
+      riga.querySelector('.evento-icona').textContent = icona;
+      riga.querySelector('.evento-titolo').textContent = titolo;
+      riga.querySelector('.dettaglio').textContent = dettaglio;
+      riga.querySelector('.evento-ora').textContent = ora;
+      $('storico').prepend(riga);
+    }
+    let timerNotifica;
+    function mostraNotifica(titolo, testo) {
+      $('notifica-titolo').textContent = titolo;
+      $('notifica-testo').textContent = testo;
+      $('notifica').classList.add('visibile');
+      clearTimeout(timerNotifica);
+      timerNotifica = setTimeout(() => $('notifica').classList.remove('visibile'), 4500);
+    }
+    function impostaStato(classe, testo) {
+      $('stato').className = 'stato ' + classe;
+      $('stato').textContent = testo;
+    }
+
+    // ---------- SOS ----------
+    const FONTI = {
+      gesto: 'Gesto di aiuto: mano aperta davanti alla fotocamera',
+      voce: 'Ha detto «aiuto» al microfono',
+      pulsante: 'Ha premuto il pulsante SOS',
+    };
+    function sos(fonte, testo) {
+      const descrizione = FONTI[fonte] || 'Richiesta di aiuto';
+      // telefono di Anna
+      avvisoAnziana('📣', 'Ho avvisato ' + FAMILIARE, 'Resta tranquilla, ti risponde subito.', false);
+      parla('Ho avvisato ' + FAMILIARE + '. Resta tranquilla.');
+      // app di Marco
+      $('allarme-fonte').textContent = testo ? descrizione + ': «' + testo + '»' : descrizione;
+      $('allarme-ora').textContent = 'alle ' + new Date().toLocaleTimeString('it-IT');
+      $('allarme-bottoni').hidden = false;
+      $('allarme').hidden = false;
+      mostraNotifica('🆘 ' + ANZIANA + ' ha bisogno di aiuto', descrizione);
+      impostaStato('emergenza', 'EMERGENZA');
+      aggiungiEvento('🆘', 'Richiesta di aiuto', descrizione, true);
+      fermaSirena();
+      fermaSirena = sirena();
+    }
+    function stoBene() {
+      avvisoAnziana('👍', 'Grazie!', 'Ho detto a ' + FAMILIARE + ' che stai bene.', true);
+      parla('Va bene, lo dico a ' + FAMILIARE + '.');
+      setTimeout(() => { $('avviso-anziana').hidden = true; }, 3000);
+      ding();
+      mostraNotifica('👍 ' + ANZIANA + ' sta bene', 'Ha fatto il gesto «pollice su»');
+      aggiungiEvento('👍', 'Sta bene', 'Gesto pollice su');
+    }
+
+    // ---------- eventi che arrivano da gesti.js e voce.js ----------
+    window.addEventListener('accanto:sos', (e) => sos(e.detail.fonte, e.detail.testo));
+    window.addEventListener('accanto:ok', () => stoBene());
+
+    window.addEventListener('accanto:gesto', (e) => {
+      const { stato, etichetta, progresso } = e.detail;
+      $('camera-spenta').hidden = stato !== 'avvio';
+      $('camera-spenta').textContent = 'Carico il modello…';
+      $('barra-gesto').style.width = Math.round((progresso || 0) * 100) + '%';
+      $('testo-gesti').textContent =
+        stato === 'avvio' ? 'Carico il modello…' :
+        stato === 'in_corso' ? etichetta :
+        stato === 'inviato' ? 'Segnale inviato ✓' :
+        '✋ = aiuto · 👍 = sto bene';
+    });
+
+    window.addEventListener('accanto:voce', (e) => {
+      const { stato, testo, errore } = e.detail;
+      if (stato === 'non_supportato') $('testo-voce').textContent = 'Voce non supportata: usa Chrome';
+      else if (stato === 'errore') $('testo-voce').textContent = 'Microfono: ' + errore;
+      else if (testo) $('testo-voce').textContent = '«' + testo + '»';
+    });
+
+    // ---------- pulsanti ----------
+    $('bottone-sos').onclick = () => sos('pulsante');
+    $('chiudi-avviso').onclick = () => { $('avviso-anziana').hidden = true; };
+
+    $('bottone-preso').onclick = () => {
+      $('bottone-preso').disabled = true;
+      $('bottone-preso').textContent = '✓ Presa, brava!';
+      ding();
+      mostraNotifica('💊 Farmaco preso', ANZIANA + ' ha preso la Cardioaspirina');
+      aggiungiEvento('💊', 'Farmaco preso', 'Cardioaspirina · 1 compressa');
+    };
+
+    $('bottone-arrivo').onclick = () => {
+      fermaSirena();
+      $('allarme').hidden = true;
+      impostaStato('attesa', 'In arrivo');
+      aggiungiEvento('🚗', 'Hai risposto', 'Sto arrivando');
+      avvisoAnziana('🚗', FAMILIARE + ' sta arrivando', 'Ha ricevuto il tuo messaggio.', true);
+      parla(FAMILIARE + ' ha ricevuto il messaggio e sta arrivando.');
+    };
+
+    $('bottone-chiama').onclick = () => {
+      fermaSirena();
+      $('allarme').hidden = true;
+      impostaStato('attesa', 'In chiamata');
+      aggiungiEvento('📞', 'Chiamata avviata', 'Con ' + ANZIANA);
+      avvisoAnziana('📞', FAMILIARE + ' ti sta chiamando', 'Rispondi con la voce, ti sente.', true);
+      parla(FAMILIARE + ' ti sta chiamando.');
+    };
+
+    // ---------- avvio della demo ----------
+    $('bottone-avvio').onclick = async () => {
+      sbloccaAudio();
+      $('avvio').hidden = true;
+      aggiungiEvento('🟢', 'Sensori attivi', 'Fotocamera e microfono pronti');
+      if (window.avviaVoce) window.avviaVoce();
+      try {
+        await window.avviaGesti($('video'));
+      } catch (errore) {
+        console.error(errore);
+        $('camera-spenta').hidden = false;
+        $('camera-spenta').textContent = 'Gesti non disponibili';
+        $('testo-gesti').textContent = 'Usa il pulsante SOS';
+      }
+    };
+
+    // ---------- tasti di riserva per la presentazione ----------
+    window.addEventListener('keydown', (e) => {
+      const tasto = e.key.toLowerCase();
+      if (tasto === 's') sos('pulsante');
+      if (tasto === 'o') stoBene();
+      if (tasto === 'r') location.reload();
+    });
+  </script>
+</body>
+</html>
