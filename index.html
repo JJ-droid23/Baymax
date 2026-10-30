@@ -152,6 +152,37 @@
     .allarme-ora { font-size: 14px; opacity: .8; }
     .allarme-bottoni { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 16px; }
 
+    /* ---------- richiesta di vedere la fotocamera ---------- */
+    .bottone-camera { width: auto; margin: 12px 16px 0; font-size: 17px; padding: 12px; }
+    .avviso-anziana .bottone-grande { max-width: 260px; }
+    .indicatore-diretta {
+      margin: 4px 16px 0;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: #1c1917; color: #fff; border-radius: 14px; padding: 8px 12px;
+      font-size: 14px; font-weight: 700;
+    }
+    .indicatore-diretta button {
+      border: 0; border-radius: 10px; padding: 6px 10px;
+      background: #dc2626; color: #fff; font-weight: 700;
+    }
+    .diretta {
+      position: absolute; inset: 0; z-index: 5;
+      display: flex; flex-direction: column; gap: 14px; padding: 50px 16px 24px;
+      background: #0b0b0d; color: #fff;
+    }
+    .diretta-testa { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 17px; }
+    .pallino { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; animation: lampeggia 1s infinite; }
+    @keyframes lampeggia { 50% { opacity: .3; } }
+    .diretta video {
+      width: 100%; flex: 1; min-height: 0; object-fit: cover;
+      border-radius: 20px; background: #1c1917;
+    }
+    .diretta-attesa {
+      flex: 1; display: grid; place-items: center; text-align: center;
+      border-radius: 20px; background: #1c1917; color: #cbd5e1; font-size: 17px; padding: 20px;
+    }
+    .diretta-nota { font-size: 12px; color: #94a3b8; text-align: center; }
+
     /* ---------- schermata iniziale ---------- */
     .avvio {
       position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
@@ -169,6 +200,10 @@
     <div class="telefono">
       <div class="schermo anziana">
         <div class="barra-stato"><span class="ora-piccola"></span><span>●●● ▮</span></div>
+        <div class="indicatore-diretta" id="indicatore-diretta" hidden>
+          <span>🔴 Marco ti sta vedendo</span>
+          <button id="interrompi-diretta">Interrompi</button>
+        </div>
         <div class="orologio" id="orologio">--:--</div>
         <div class="data" id="data"></div>
 
@@ -224,6 +259,8 @@
           <div class="stato" id="stato">Tutto ok</div>
         </div>
 
+        <button class="bottone-grande blu bottone-camera" id="bottone-vedi">📹 Vedi la fotocamera di Anna</button>
+
         <div class="titolo-sezione">Oggi</div>
         <div id="storico"></div>
 
@@ -231,6 +268,14 @@
           <div class="notifica-app">ACCANTO · adesso</div>
           <div class="notifica-titolo" id="notifica-titolo"></div>
           <div class="notifica-testo" id="notifica-testo"></div>
+        </div>
+
+        <div class="diretta" id="diretta" hidden>
+          <div class="diretta-testa"><span class="pallino"></span> Fotocamera di Anna</div>
+          <video id="video-familiare" playsinline muted hidden></video>
+          <div class="diretta-attesa" id="diretta-attesa">In attesa che Anna accetti…</div>
+          <div class="diretta-nota">Anna vede un avviso mentre la stai guardando.</div>
+          <button class="bottone-grande bianco" id="chiudi-diretta">Chiudi</button>
         </div>
 
         <div class="allarme" id="allarme" hidden>
@@ -438,6 +483,49 @@
       aggiungiEvento('📞', 'Chiamata avviata', 'Con ' + ANZIANA);
       avvisoAnziana('📞', FAMILIARE + ' ti sta chiamando', 'Rispondi con la voce, ti sente.', true);
       parla(FAMILIARE + ' ti sta chiamando.');
+    };
+
+    // ---------- Marco vede la fotocamera di Anna ----------
+    // Il video parte subito. Sul telefono di Anna compare l'avviso "Marco ti sta vedendo".
+    async function flussoCamera() {
+      if ($('video').srcObject) return $('video').srcObject; // già accesa per i gesti
+      const flusso = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      $('video').srcObject = flusso;
+      $('video').play();
+      $('camera-spenta').hidden = true;
+      return flusso;
+    }
+
+    function chiudiDiretta() {
+      $('diretta').hidden = true;
+      $('indicatore-diretta').hidden = true;
+      $('video-familiare').srcObject = null;
+      $('video-familiare').hidden = true;
+    }
+
+    $('bottone-vedi').onclick = async () => {
+      $('diretta').hidden = false;
+      $('video-familiare').hidden = true;
+      $('diretta-attesa').hidden = false;
+      $('diretta-attesa').textContent = 'Collegamento in corso…';
+      try {
+        const flusso = await flussoCamera();
+        $('video-familiare').srcObject = flusso;
+        await $('video-familiare').play();
+        $('video-familiare').hidden = false;
+        $('diretta-attesa').hidden = true;
+        $('indicatore-diretta').hidden = false;
+        aggiungiEvento('📹', 'Video attivo', 'Fotocamera di ' + ANZIANA);
+      } catch (errore) {
+        $('diretta-attesa').textContent = 'Fotocamera non disponibile';
+      }
+    };
+
+    $('chiudi-diretta').onclick = chiudiDiretta;
+
+    $('interrompi-diretta').onclick = () => {
+      chiudiDiretta();
+      aggiungiEvento('⏹', 'Video interrotto', 'Da ' + ANZIANA);
     };
 
     // ---------- avvio della demo ----------
