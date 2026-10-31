@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accanto – tablet</title>
+  <style>
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { margin: 0; height: 100%; overflow: hidden; }
+    body {
+      font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      --sfondo-sx: #fbf7ef; --testo-sx: #1c1917; --linea: #e7e0d2;
+      --sfondo-dx: #fff4d6; --testo-dx: #3b2a06; --tenue-dx: #8a6d2f;
+      background: var(--sfondo-sx);
+      color: var(--testo-sx);
+    }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* colori che cambiano con il momento della giornata */
+    body.mattina    { --sfondo-dx: #fff4d6; --testo-dx: #3b2a06; --tenue-dx: #8a6d2f; }
+    body.pranzo     { --sfondo-dx: #ffe8c2; --testo-dx: #3b2306; --tenue-dx: #8a5a1f; }
+    body.pomeriggio { --sfondo-dx: #fdebd3; --testo-dx: #3b1f08; --tenue-dx: #8f5b2a; }
+    body.sera       { --sfondo-dx: #3a2a4a; --testo-dx: #fff3e6; --tenue-dx: #d7b9e6; }
+    body.notte      { --sfondo-dx: #0f1b33; --testo-dx: #e8eefc; --tenue-dx: #93a6cf;
+                      --sfondo-sx: #182033; --testo-sx: #e8eefc; --linea: #2a3550; }
+
+    /* ---------- schermo diviso in due ---------- */
+    .diviso { display: grid; grid-template-columns: 1fr 1fr; height: 100%; }
+    .pannello { padding: 5vh 4.5vw 17vh; display: flex; flex-direction: column; min-width: 0; }
+    .calendario { border-right: 3px solid var(--linea); background: var(--sfondo-sx); color: var(--testo-sx); transition: background .6s; }
+    .oggi { background: var(--sfondo-dx); color: var(--testo-dx); justify-content: center; text-align: center; transition: background .6s, color .6s; }
+    .titolo-pannello {
+      margin: 0 0 3vh; font-size: 3.4vh; font-weight: 800;
+      letter-spacing: .25em; text-transform: uppercase; opacity: .55;
+    }
+    .oggi { position: relative; }
+    .oggi .titolo-pannello { position: absolute; top: 5vh; left: 0; right: 0; }
+
+    /* ---------- pannello OGGI (dati generali) ---------- */
+    .giorno { font-size: 11vh; font-weight: 800; line-height: 1; }
+    .data { font-size: 6.5vh; font-weight: 700; margin-top: 1.5vh; }
+    .anno { font-size: 4.5vh; font-weight: 600; color: var(--tenue-dx); margin-top: .5vh; }
+    .orologio { font-size: 17vh; font-weight: 800; line-height: 1; margin: 4vh 0 2vh; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .momento {
+      display: inline-flex; align-items: center; gap: 1.5vh; align-self: center;
+      font-size: 5.5vh; font-weight: 800; padding: 1.5vh 4vh; border-radius: 99px;
+      background: color-mix(in srgb, var(--testo-dx) 9%, transparent);
+    }
+
+    /* ---------- pannello CALENDARIO ---------- */
+    .scheda { border-radius: 3vh; padding: 3.5vh 3.5vh; background: #fff; box-shadow: 0 .6vh 2vh rgba(0,0,0,.07); color: #1c1917; }
+    body.notte .scheda { background: #222c44; color: #e8eefc; box-shadow: none; }
+    .etichetta { font-size: 2.8vh; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #78716c; }
+    body.notte .etichetta { color: #93a6cf; }
+    .medicina { border: .7vh solid #f59e0b; display: flex; flex-direction: column; gap: 1.2vh; animation: respiro 2s ease-in-out infinite; }
+    .medicina .avviso { font-size: 4vh; font-weight: 800; color: #b45309; }
+    body.notte .medicina .avviso { color: #fbbf24; }
+    .medicina .nome { font-size: 7vh; font-weight: 800; line-height: 1.05; }
+    .medicina .dettaglio { font-size: 3.3vh; opacity: .8; }
+    .bottone-presa {
+      margin-top: 1.5vh; border: 0; border-radius: 2.5vh; height: 11vh;
+      background: #16a34a; color: #fff; font-size: 5.5vh; font-weight: 900; letter-spacing: .05em;
+      box-shadow: 0 .8vh 0 #166534;
+    }
+    .bottone-presa:active { transform: translateY(.5vh); box-shadow: 0 .3vh 0 #166534; }
+    .adesso .titolo { font-size: 6.5vh; font-weight: 800; margin-top: 1vh; line-height: 1.1; }
+    .adesso .dettaglio { font-size: 3.2vh; opacity: .75; margin-top: .8vh; }
+    .dopo { margin-top: 2.5vh; background: transparent; box-shadow: none; border: .4vh dashed var(--linea); color: inherit; }
+    body.notte .dopo { background: transparent; }
+    .dopo .titolo { font-size: 4.6vh; font-weight: 700; margin-top: .6vh; }
+    .fatto {
+      flex: 1; display: grid; place-items: center; text-align: center;
+      font-size: 7vh; font-weight: 900; color: #16a34a; animation: entra .3s ease-out;
+    }
+    @keyframes respiro { 50% { box-shadow: 0 0 0 1.4vh rgba(245,158,11,.22); } }
+    @keyframes entra { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+
+    /* ---------- tasto di aiuto (sul tablet vero è un tasto fisico) ---------- */
+    .tasto-aiuto {
+      position: fixed; bottom: 3vh; left: 50%; transform: translateX(-50%);
+      width: 13vh; height: 13vh; border-radius: 50%; border: 1vh solid #fff;
+      background: #dc2626; color: #fff; font-size: 2.6vh; font-weight: 900; letter-spacing: .08em;
+      box-shadow: 0 1vh 3vh rgba(220,38,38,.45);
+    }
+    .tasto-aiuto:active { transform: translateX(-50%) scale(.95); }
+
+    /* ---------- schermate sovrapposte ---------- */
+    .sopra {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3vh; padding: 5vh; text-align: center; animation: entra .25s ease-out;
+    }
+    #aiuto { background: rgba(15, 23, 42, .96); color: #fff; }
+    .domanda { font-size: 7vh; font-weight: 800; }
+    .scelte { display: grid; grid-template-columns: 1fr 1fr; gap: 3vw; width: 100%; flex: 1; max-height: 55vh; }
+    .scelta {
+      border: 0; border-radius: 4vh; color: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1vh;
+    }
+    .scelta .icona { font-size: 15vh; line-height: 1; }
+    .scelta .chi { font-size: 7.5vh; font-weight: 900; }
+    .scelta .nota { font-size: 3.6vh; opacity: .9; }
+    .scelta.parente { background: #0f766e; }
+    .scelta.soccorsi { background: #dc2626; }
+    .suggerimento { font-size: 3.4vh; color: #cbd5e1; }
+    .conto-alla-rovescia { font-size: 3.6vh; color: #fde68a; font-weight: 700; }
+    .bottone-secondario {
+      border: 0; border-radius: 2.5vh; padding: 2.2vh 7vh;
+      background: #fff; color: #0f172a; font-size: 4vh; font-weight: 800;
+    }
+    #chiamata { background: #0f766e; color: #fff; }
+    #chiamata.soccorsi { background: #b91c1c; }
+    .avatar-grande {
+      width: 26vh; height: 26vh; border-radius: 50%; background: rgba(255,255,255,.18);
+      display: grid; place-items: center; font-size: 14vh; animation: pulsa 1.6s infinite;
+    }
+    @keyframes pulsa { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.5); } 100% { box-shadow: 0 0 0 5vh rgba(255,255,255,0); } }
+    .stato-chiamata { font-size: 7vh; font-weight: 800; }
+    .durata { font-size: 4.5vh; opacity: .9; font-variant-numeric: tabular-nums; }
+    #messaggio { background: #134e4a; color: #fff; }
+    .messaggio-da { font-size: 4.5vh; opacity: .85; }
+    .messaggio-testo { font-size: 8vh; font-weight: 800; line-height: 1.15; max-width: 85vw; }
+    .onde { display: flex; gap: 1.2vh; align-items: center; height: 12vh; }
+    .onde span { width: 2vh; border-radius: 1vh; background: #5eead4; animation: onda 1s ease-in-out infinite; }
+    .onde span:nth-child(2) { animation-delay: .15s; } .onde span:nth-child(3) { animation-delay: .3s; }
+    .onde span:nth-child(4) { animation-delay: .45s; } .onde span:nth-child(5) { animation-delay: .6s; }
+    @keyframes onda { 0%, 100% { height: 3vh; } 50% { height: 12vh; } }
+
+    /* piccoli indicatori */
+    .indicatore-video {
+      position: fixed; top: 2vh; left: 50%; transform: translateX(-50%); z-index: 5;
+      background: #1c1917; color: #fff; padding: 1.2vh 3vh; border-radius: 99px;
+      font-size: 2.8vh; font-weight: 700;
+    }
+    .sottotitolo {
+      position: fixed; z-index: 20; left: 50%; bottom: 18vh; transform: translateX(-50%);
+      max-width: 80vw; background: rgba(15,23,42,.88); color: #fff;
+      padding: 1.6vh 3.5vh; border-radius: 2vh; font-size: 3.4vh; font-weight: 600; text-align: center;
+    }
+    .ascolto {
+      position: fixed; right: 2.5vw; bottom: 3vh; z-index: 4;
+      font-size: 2.2vh; color: #78716c; max-width: 30vw; text-align: right;
+    }
+    body.notte .ascolto { color: #93a6cf; }
+    .ascolto .puntino { display: inline-block; width: 1.2vh; height: 1.2vh; border-radius: 50%; background: #a8a29e; margin-right: .6vh; }
+    .ascolto.attivo .puntino { background: #16a34a; }
+    #avvio { background: #0f172a; color: #e2e8f0; cursor: pointer; }
+    #avvio .logo { font-size: 9vh; font-weight: 800; color: #5eead4; }
+    #avvio p { font-size: 4vh; margin: 0; }
+
+    /* modalità vetrina: il tasto fisico è disegnato nella cornice del tablet */
+    body.vetrina .tasto-aiuto { display: none; }
+    body.vetrina .pannello { padding-bottom: 6vh; }
+    body.vetrina .sottotitolo { bottom: 6vh; }
+  </style>
+</head>
+<body>
+  <main class="diviso">
+    <!-- ================= CALENDARIO ================= -->
+    <section class="pannello calendario">
+      <h2 class="titolo-pannello">Calendario</h2>
+
+      <div class="scheda medicina" id="scheda-medicina" hidden>
+        <div class="avviso">💊 È ora della medicina</div>
+        <div class="nome" id="medicina-nome"></div>
+        <div class="dettaglio" id="medicina-dettaglio"></div>
+        <button class="bottone-presa" id="bottone-presa">✓ PRESA</button>
+      </div>
+
+      <div class="scheda adesso" id="scheda-adesso">
+        <div class="etichetta">Adesso</div>
+        <div class="titolo" id="adesso-titolo"></div>
+        <div class="dettaglio" id="adesso-dettaglio"></div>
+      </div>
+
+      <div class="fatto" id="fatto" hidden>✓ Fatto, brava!</div>
+
+      <div class="scheda dopo" id="scheda-dopo">
+        <div class="etichetta" id="dopo-quando"></div>
+        <div class="titolo" id="dopo-titolo"></div>
+      </div>
+    </section>
+
+    <!-- ================= OGGI (dati generali) ================= -->
+    <section class="pannello oggi">
+      <h2 class="titolo-pannello">Oggi</h2>
+      <div class="giorno" id="giorno"></div>
+      <div class="data" id="data"></div>
+      <div class="anno" id="anno"></div>
+      <div class="orologio" id="orologio">--:--</div>
+      <div class="momento" id="momento"></div>
+    </section>
+  </main>
+
+  <button class="tasto-aiuto" id="tasto-aiuto" aria-label="Chiedi aiuto">AIUTO</button>
+
+  <div class="indicatore-video" id="indicatore-video" hidden>📹 Marco ti sta guardando</div>
+  <div class="sottotitolo" id="sottotitolo" hidden></div>
+  <div class="ascolto" id="ascolto"><span class="puntino"></span><span id="ascolto-testo">Microfono spento</span></div>
+
+  <!-- chi vuoi chiamare? -->
+  <div class="sopra" id="aiuto" hidden>
+    <div class="domanda">Chi vuoi chiamare?</div>
+    <div class="scelte">
+      <button class="scelta parente" id="scelta-parente">
+        <span class="icona">👨</span><span class="chi" id="nome-parente">Marco</span><span class="nota">tuo figlio</span>
+      </button>
+      <button class="scelta soccorsi" id="scelta-soccorsi">
+        <span class="icona">🚑</span><span class="chi">Soccorsi</span><span class="nota" id="numero-soccorsi">Numero 112</span>
+      </button>
+    </div>
+    <div class="conto-alla-rovescia" id="conto-alla-rovescia" hidden></div>
+    <div class="suggerimento">🎙️ Puoi anche dirlo a voce: «<span id="suggerimento-parente">Marco</span>» oppure «soccorsi»</div>
+    <button class="bottone-secondario" id="annulla-aiuto">Annulla</button>
+  </div>
+
+  <!-- chiamata in corso -->
+  <div class="sopra" id="chiamata" hidden>
+    <div class="avatar-grande" id="chiamata-icona">👨</div>
+    <div class="stato-chiamata" id="chiamata-stato"></div>
+    <div class="durata" id="chiamata-durata"></div>
+    <button class="bottone-secondario" id="chiudi-chiamata">Chiudi</button>
+  </div>
+
+  <!-- messaggio dal familiare -->
+  <div class="sopra" id="messaggio" hidden>
+    <div class="messaggio-da" id="messaggio-da"></div>
+    <div class="onde" id="messaggio-onde"><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="messaggio-testo" id="messaggio-testo"></div>
+  </div>
+
+  <!-- primo tocco: serve al browser per attivare voce e microfono -->
+  <div class="sopra" id="avvio">
+    <div class="logo">◉ Accanto</div>
+    <p>Tocca lo schermo per iniziare</p>
+  </div>
+
+  <script src="stato.js"></script>
+  <script>
+    const A = window.Accanto;
+    const $ = (id) => document.getElementById(id);
+    const inVetrina = new URLSearchParams(location.search).has('vetrina');
+    if (inVetrina) document.body.classList.add('vetrina');
+
+    const livello = () => A.LIVELLI[A.stato.livello] || A.LIVELLI[2];
+    const nomeA = () => A.stato.nomeAnziano;
+    const nomeF = () => A.stato.nomeFamiliare;
+
+    // ================= DATI GENERALI =================
+    function aggiornaOggi() {
+      const d = new Date();
+      const giorno = d.toLocaleDateString('it-IT', { weekday: 'long' });
+      $('giorno').textContent = giorno.charAt(0).toUpperCase() + giorno.slice(1);
+      $('data').textContent = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+      $('anno').textContent = d.getFullYear();
+      $('orologio').textContent = A.hhmm(d);
+      const m = A.momentoDellaGiornata(d);
+      $('momento').textContent = `${m.icona} ${m.nome}`;
+      document.body.classList.remove('mattina', 'pranzo', 'pomeriggio', 'sera', 'notte');
+      document.body.classList.add(m.classe);
+    }
+
+    // ================= CALENDARIO =================
+    let mostraFatto = false;
+    function aggiornaCalendario() {
+      const medicina = A.medicinaDaPrendere();
+      const impegno = A.impegnoAdesso();
+      const dopo = A.prossimoEvento();
+
+      $('fatto').hidden = !mostraFatto;
+      $('scheda-medicina').hidden = mostraFatto || !medicina;
+      $('scheda-adesso').hidden = mostraFatto || Boolean(medicina);
+
+      if (medicina) {
+        $('medicina-nome').textContent = medicina.titolo;
+        $('medicina-dettaglio').textContent = medicina.dettaglio || '';
+        $('bottone-presa').dataset.id = medicina.id;
+      }
+      if (impegno) {
+        $('adesso-titolo').textContent = impegno.titolo;
+        $('adesso-dettaglio').textContent = impegno.dettaglio || '';
+      } else {
+        $('adesso-titolo').textContent = 'Niente in programma';
+        $('adesso-dettaglio').textContent = 'Puoi riposarti 🙂';
+      }
+      $('scheda-dopo').hidden = !dopo;
+      if (dopo) {
+        $('dopo-quando').textContent = `Più tardi · alle ${dopo.ora}`;
+        $('dopo-titolo').textContent = (dopo.tipo === 'medicina' ? '💊 ' : '') + dopo.titolo;
+      }
+      $('nome-parente').textContent = nomeF();
+      $('suggerimento-parente').textContent = nomeF();
+      $('numero-soccorsi').textContent = 'Numero ' + A.stato.numeroEmergenza;
+      $('indicatore-video').textContent = `📹 ${nomeF()} ti sta guardando`;
+    }
+
+    function aggiornaTutto() { aggiornaOggi(); aggiornaCalendario(); }
+    aggiornaTutto();
+    setInterval(aggiornaOggi, 1000);
+    setInterval(() => { aggiornaCalendario(); controllaPromemoria(); }, 15000);
+    A.on('stato', aggiornaCalendario);
+
+    $('bottone-presa').onclick = () => {
+      const medicina = A.stato.eventi.find((e) => e.id === $('bottone-presa').dataset.id);
+      if (!medicina) return;
+      A.segnaFatto(medicina.id);
+      A.registra('💊', `${nomeA()} ha preso ${medicina.titolo}`, 'ok');
+      const frasi = {
+        1: `Perfetto, ho segnato che hai preso la ${medicina.titolo} alle ${A.hhmm()}.`,
+        2: 'Brava, l\'ho segnato.',
+        3: 'Brava.',
+      };
+      parla(frasi[A.stato.livello]);
+      mostraFatto = true;
+      aggiornaCalendario();
+      setTimeout(() => { mostraFatto = false; aggiornaCalendario(); }, 2500);
+    };
+
+    // ================= VOCE DEL TABLET =================
+    let staParlando = false;
+    let fineParlato = 0;
+    let timerSottotitolo;
+    function parla(frase, poi) {
+      $('sottotitolo').textContent = frase;
+      // sulle schermate a tutto schermo il testo è già scritto: niente sottotitolo
+      $('sottotitolo').hidden = sovrapposizioneAperta();
+      clearTimeout(timerSottotitolo);
+      const nascondi = () => { timerSottotitolo = setTimeout(() => { $('sottotitolo').hidden = true; }, 2500); };
+      if (!('speechSynthesis' in window)) { nascondi(); if (poi) poi(); return; }
+      const voce = new SpeechSynthesisUtterance(frase);
+      voce.lang = 'it-IT';
+      voce.rate = livello().velocitaVoce;
+      const italiana = speechSynthesis.getVoices().find((v) => v.lang.startsWith('it'));
+      if (italiana) voce.voice = italiana;
+      staParlando = true;
+      voce.onend = voce.onerror = () => {
+        staParlando = false;
+        fineParlato = Date.now();
+        nascondi();
+        if (poi) poi();
+      };
+      speechSynthesis.cancel();
+      speechSynthesis.speak(voce);
+    }
+
+    // ================= PROMEMORIA A VOCE =================
+    const ultimoPromemoria = {};
+    const familiareAvvisato = {};
+    function controllaPromemoria() {
+      if (!avviato) return;
+      const medicina = A.medicinaDaPrendere();
+      if (!medicina) return;
+      const adesso = Date.now();
+      const intervallo = livello().ripetiPromemoria * 60000;
+      if (!ultimoPromemoria[medicina.id] || adesso - ultimoPromemoria[medicina.id] >= intervallo) {
+        ultimoPromemoria[medicina.id] = adesso;
+        const frasi = {
+          1: `È ora di prendere la ${medicina.titolo}: ${medicina.dettaglio}. Quando l'hai presa, tocca il tasto verde.`,
+          2: `${nomeA()}, è ora della medicina. Prendi la ${medicina.titolo}, poi tocca il tasto verde.`,
+          3: `${nomeA()}, prendi la medicina. Poi tocca il tasto verde.`,
+        };
+        if (!sovrapposizioneAperta()) parla(frasi[A.stato.livello]);
+      }
+      // avvisa il familiare se dopo 30 minuti non l'ha ancora presa
+      const ritardo = A.minutiAdesso() - A.minuti(medicina.ora);
+      if (A.stato.avvisaMedicineNonPrese && ritardo >= 30 && !familiareAvvisato[medicina.id]) {
+        familiareAvvisato[medicina.id] = true;
+        A.registra('⚠️', `${nomeA()} non ha ancora preso ${medicina.titolo} (prevista alle ${medicina.ora})`, 'avviso');
+      }
+    }
+
+    // ================= DOMANDE A VOCE =================
+    function rispondi(testo) {
+      const t = testo.toLowerCase();
+      const L = A.stato.livello;
+
+      // mentre è aperta la scelta "chi vuoi chiamare?"
+      if (!$('aiuto').hidden) {
+        const parente = new RegExp(`${nomeF().toLowerCase()}|figlio|figlia|parente|famiglia|\\bsì\\b|\\bsi\\b|va bene`);
+        if (/soccors|ambulanz|emergenz|112|118|dottor|medico|ospedale/.test(t)) { chiama('soccorsi'); return true; }
+        if (parente.test(t)) { chiama('parente'); return true; }
+        if (/annull|niente|lascia stare|no grazie|sbagliato/.test(t)) { chiudiAiuto(); return true; }
+        return false;
+      }
+      if (!$('chiamata').hidden || !$('messaggio').hidden) return false;
+
+      if (/\baiut|soccors/.test(t)) { apriAiuto('voce'); return true; }
+
+      if (/medicin|pastigl|pillol|farmac|compress/.test(t)) {
+        const daPrendere = A.medicinaDaPrendere();
+        const presa = A.ultimaMedicinaPresa();
+        const prossima = A.eventiOrdinati().find((e) => e.tipo === 'medicina' && !e.fatto && A.minuti(e.ora) > A.minutiAdesso());
+        if (daPrendere) {
+          parla({ 1: `No, non ancora: è ora di prendere la ${daPrendere.titolo}.`, 2: `Non ancora. È ora di prendere la ${daPrendere.titolo}.`, 3: 'Non ancora. Prendila adesso.' }[L]);
+        } else if (presa) {
+          let frase = { 1: `Sì, hai già preso la ${presa.titolo} alle ${presa.fattoAlle}.`, 2: 'Sì, l\'hai già presa. Va tutto bene.', 3: 'Sì, già presa.' }[L];
+          if (L === 1 && prossima) frase += ` La prossima è la ${prossima.titolo} alle ${prossima.ora}.`;
+          parla(frase);
+        } else {
+          parla('Per adesso non ci sono medicine da prendere.');
+        }
+        return true;
+      }
+      if (/che giorno|che data|quanti ne abbiamo|oggi che/.test(t)) {
+        const d = new Date();
+        const giorno = d.toLocaleDateString('it-IT', { weekday: 'long' });
+        const data = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+        parla({ 1: `Oggi è ${giorno} ${data} ${d.getFullYear()}.`, 2: `Oggi è ${giorno} ${data}.`, 3: `Oggi è ${giorno}.` }[L]);
+        return true;
+      }
+      if (/che ore|che ora|l'ora/.test(t)) {
+        const m = A.momentoDellaGiornata();
+        parla(`Sono le ${A.hhmm()}. È ${m.nome.toLowerCase()}.`);
+        return true;
+      }
+      if (/cosa devo fare|che devo fare|impegn|programma|cosa c'è oggi/.test(t)) {
+        const medicina = A.medicinaDaPrendere();
+        const impegno = A.impegnoAdesso();
+        const dopo = A.prossimoEvento();
+        let frase = medicina ? `Adesso devi prendere la ${medicina.titolo}.` : impegno ? `Adesso: ${impegno.titolo}.` : 'Adesso non hai impegni.';
+        if (dopo && L < 3) frase += ` Più tardi, alle ${dopo.ora}: ${dopo.titolo}.`;
+        parla(frase);
+        return true;
+      }
+      return false;
+    }
+
+    let avviato = false;
+    function avviaAscolto() {
+      const Riconoscimento = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Riconoscimento) { $('ascolto-testo').textContent = 'Voce non disponibile (usa Chrome)'; return; }
+      const ascolto = new Riconoscimento();
+      ascolto.lang = 'it-IT';
+      ascolto.continuous = true;
+      ascolto.interimResults = false;
+      let attivo = true;
+      ascolto.onresult = (e) => {
+        // non ascolta se stesso mentre parla
+        if (staParlando || Date.now() - fineParlato < 1200 || audioInRiproduzione) return;
+        const testo = e.results[e.results.length - 1][0].transcript.trim();
+        $('ascolto-testo').textContent = `«${testo}»`;
+        rispondi(testo);
+      };
+      ascolto.onend = () => { if (attivo) setTimeout(() => { try { ascolto.start(); } catch (err) {} }, 300); };
+      ascolto.onerror = (e) => {
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          attivo = false;
+          $('ascolto').classList.remove('attivo');
+          $('ascolto-testo').textContent = 'Microfono non consentito';
+        }
+      };
+      ascolto.start();
+      $('ascolto').classList.add('attivo');
+      $('ascolto-testo').textContent = 'Ti ascolto';
+    }
+
+    $('avvio').onclick = () => {
+      $('avvio').hidden = true;
+      avviato = true;
+      avviaAscolto();
+      setTimeout(controllaPromemoria, 800);
+    };
+
+    // ================= TASTO DI AIUTO =================
+    let timerAuto;
+    let timerConto;
+    function sovrapposizioneAperta() {
+      return !$('aiuto').hidden || !$('chiamata').hidden || !$('messaggio').hidden;
+    }
+    function apriAiuto(fonte = 'tasto') {
+      if (!$('chiamata').hidden || !$('aiuto').hidden) return;
+      $('avvio').hidden = true;
+      $('aiuto').hidden = false;
+      A.registra('🔴', `${nomeA()} ha ${fonte === 'voce' ? 'chiesto aiuto a voce' : 'premuto il tasto di aiuto'}`, 'avviso');
+      A.invia('aiuto-premuto', { fonte });
+      const L = A.stato.livello;
+      parla(L === 3 ? `Chiamo ${nomeF()}?` : `Chi vuoi chiamare? ${nomeF()}, oppure i soccorsi?`);
+
+      clearTimeout(timerAuto);
+      clearInterval(timerConto);
+      $('conto-alla-rovescia').hidden = true;
+      if (livello().chiamataAutomatica) {
+        let secondi = 10;
+        $('conto-alla-rovescia').hidden = false;
+        $('conto-alla-rovescia').textContent = `Tra ${secondi} secondi chiamo ${nomeF()}`;
+        timerConto = setInterval(() => {
+          secondi--;
+          $('conto-alla-rovescia').textContent = `Tra ${secondi} secondi chiamo ${nomeF()}`;
+          if (secondi <= 0) { clearInterval(timerConto); chiama('parente'); }
+        }, 1000);
+      }
+    }
+    function chiudiAiuto() {
+      clearInterval(timerConto);
+      $('aiuto').hidden = true;
+      A.registra('↩️', `${nomeA()} ha annullato la richiesta`);
+    }
+    $('tasto-aiuto').onclick = () => apriAiuto('tasto');
+    $('annulla-aiuto').onclick = chiudiAiuto;
+    $('scelta-parente').onclick = () => chiama('parente');
+    $('scelta-soccorsi').onclick = () => chiama('soccorsi');
+    A.on('tasto-fisico', () => apriAiuto('tasto'));
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && $('aiuto').hidden && $('chiamata').hidden) { e.preventDefault(); apriAiuto('tasto'); }
+    });
+
+    // ================= CHIAMATE =================
+    let timerDurata;
+    let timerRisposta;
+    let chiamataVerso = null;
+    function chiama(verso) {
+      clearInterval(timerConto);
+      $('aiuto').hidden = true;
+      chiamataVerso = verso;
+      $('chiamata').hidden = false;
+      $('chiamata').classList.toggle('soccorsi', verso === 'soccorsi');
+      $('chiamata-icona').textContent = verso === 'soccorsi' ? '🚑' : '👨';
+      $('chiamata-durata').textContent = '';
+      $('chiudi-chiamata').textContent = 'Annulla';
+      if (verso === 'soccorsi') {
+        $('chiamata-stato').textContent = `Sto chiamando i soccorsi (${A.stato.numeroEmergenza})…`;
+        parla('Sto chiamando i soccorsi. Resta tranquilla.');
+        A.registra('🚑', `${nomeA()} ha chiamato i soccorsi (${A.stato.numeroEmergenza})`, 'allarme');
+        A.invia('chiamata', { verso: 'soccorsi' });
+        timerRisposta = setTimeout(() => inizioConversazione(`In linea con il ${A.stato.numeroEmergenza}`), 3500);
+      } else {
+        $('chiamata-stato').textContent = `Sto chiamando ${nomeF()}…`;
+        parla(`Sto chiamando ${nomeF()}.`);
+        A.registra('📞', `${nomeA()} ti sta chiamando`, 'allarme');
+        A.invia('chiamata', { verso: 'parente' });
+        // sul tablet da solo (senza l'app del familiare aperta) la risposta è simulata
+        if (!inVetrina) timerRisposta = setTimeout(() => inizioConversazione(`In chiamata con ${nomeF()}`), 5000);
+      }
+    }
+    function inizioConversazione(testo) {
+      clearTimeout(timerRisposta);
+      if ($('chiamata').hidden) return;
+      $('chiamata-stato').textContent = testo;
+      $('chiudi-chiamata').textContent = 'Chiudi';
+      const inizio = Date.now();
+      clearInterval(timerDurata);
+      timerDurata = setInterval(() => {
+        const s = Math.floor((Date.now() - inizio) / 1000);
+        $('chiamata-durata').textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+      }, 500);
+    }
+    function fineChiamata(daQui) {
+      clearTimeout(timerRisposta);
+      clearInterval(timerDurata);
+      if ($('chiamata').hidden) return;
+      $('chiamata').hidden = true;
+      if (daQui) {
+        A.invia('chiamata-fine', { verso: chiamataVerso });
+        A.registra('📞', 'Chiamata terminata');
+      }
+    }
+    $('chiudi-chiamata').onclick = () => fineChiamata(true);
+    A.on('chiamata-risposta', () => inizioConversazione(`In chiamata con ${nomeF()}`));
+    A.on('chiamata-fine', () => fineChiamata(false));
+    A.on('arrivo', () => {
+      fineChiamata(false);
+      mostraMessaggio(`${nomeF()} ti ha risposto`, 'Sto arrivando!', false);
+      parla(`${nomeF()} sta arrivando.`, chiudiMessaggioPresto);
+    });
+
+    // ================= MESSAGGI DAL FAMILIARE =================
+    let audioInRiproduzione = false;
+    let timerMessaggio;
+    function mostraMessaggio(da, testo, onde) {
+      clearTimeout(timerMessaggio);
+      $('messaggio-da').textContent = da;
+      $('messaggio-testo').textContent = testo;
+      $('messaggio-onde').hidden = !onde;
+      $('messaggio').hidden = false;
+    }
+    function chiudiMessaggioPresto() {
+      timerMessaggio = setTimeout(() => { $('messaggio').hidden = true; }, 2500);
+    }
+    A.on('frase', ({ testo }) => {
+      mostraMessaggio(`${nomeF()} dice:`, `«${testo}»`, false);
+      parla(`${nomeF()} dice: ${testo}`, chiudiMessaggioPresto);
+    });
+    A.on('audio', ({ blob }) => {
+      mostraMessaggio(`🔊 ${nomeF()} ti sta parlando`, '', true);
+      const audio = new Audio(URL.createObjectURL(blob));
+      audioInRiproduzione = true;
+      audio.onended = audio.onerror = () => {
+        audioInRiproduzione = false;
+        fineParlato = Date.now();
+        chiudiMessaggioPresto();
+      };
+      audio.play().catch(() => { audioInRiproduzione = false; chiudiMessaggioPresto(); });
+    });
+    A.on('video', ({ attivo }) => { $('indicatore-video').hidden = !attivo; });
+  </script>
+</body>
+</html>

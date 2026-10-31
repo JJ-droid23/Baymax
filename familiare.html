@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Accanto – familiare</title>
+  <style>
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #e9eef0; color: #0f172a;
+      --brand: #0f766e; --brand-chiaro: #ccfbf1; --tenue: #64748b; --carta: #fff; --fondo: #f4f7f8;
+    }
+    button, input, select { font-family: inherit; }
+    button { cursor: pointer; }
+    .app {
+      position: relative; max-width: 430px; height: 100%; margin: 0 auto;
+      background: var(--fondo); overflow: hidden; display: flex; flex-direction: column;
+    }
+    .schermata { flex: 1; overflow-y: auto; padding: 14px 16px 24px; animation: entra .2s ease-out; }
+    @keyframes entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    /* ---------- intestazioni ---------- */
+    .testata { display: flex; align-items: center; justify-content: space-between; margin: 6px 2px 16px; }
+    .logo { font-size: 26px; font-weight: 800; color: var(--brand); letter-spacing: -.02em; }
+    .saluto { font-size: 14px; color: var(--tenue); }
+    .cerchio {
+      width: 44px; height: 44px; border-radius: 50%; border: 0;
+      background: var(--carta); box-shadow: 0 2px 8px rgba(0,0,0,.08); font-size: 20px;
+    }
+    .testata-sotto { display: flex; align-items: center; gap: 10px; margin: 6px 0 16px; }
+    .indietro { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--carta); font-size: 22px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .testata-sotto h1 { margin: 0; font-size: 22px; }
+    .testata-sotto .sotto { font-size: 13px; color: var(--tenue); }
+
+    /* ---------- tessere Calendario / Video / Micro ---------- */
+    .tessere { display: grid; grid-template-columns: 1.25fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+    .tessera {
+      border: 0; border-radius: 20px; padding: 14px; text-align: left; color: #fff;
+      display: flex; flex-direction: column; justify-content: space-between; min-height: 82px;
+      box-shadow: 0 6px 16px rgba(15,118,110,.18);
+    }
+    .tessera .icona { font-size: 26px; }
+    .tessera .nome { font-size: 17px; font-weight: 800; }
+    .tessera .info { font-size: 12.5px; opacity: .9; }
+    .tessera.calendario { grid-row: span 2; background: linear-gradient(160deg, #14b8a6, #0f766e); }
+    .tessera.video { background: linear-gradient(160deg, #3b82f6, #1d4ed8); box-shadow: 0 6px 16px rgba(29,78,216,.18); }
+    .tessera.micro { background: linear-gradient(160deg, #f97316, #c2410c); box-shadow: 0 6px 16px rgba(194,65,12,.18); }
+
+    /* ---------- dashboard ---------- */
+    .titolo-sezione { font-size: 12.5px; font-weight: 800; color: var(--tenue); text-transform: uppercase; letter-spacing: .08em; margin: 18px 4px 8px; }
+    .carta { background: var(--carta); border-radius: 18px; padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+    .persona { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--brand-chiaro); color: var(--brand); display: grid; place-items: center; font-weight: 800; font-size: 20px; flex-shrink: 0; }
+    .persona-nome { font-weight: 800; font-size: 17px; }
+    .persona-dove { font-size: 13px; color: var(--tenue); }
+    .pillola { margin-left: auto; font-size: 11.5px; font-weight: 800; padding: 6px 10px; border-radius: 99px; white-space: nowrap; }
+    .pillola.ok { background: #dcfce7; color: #166534; }
+    .pillola.avviso { background: #fef3c7; color: #92400e; }
+    .pillola.allarme { background: #dc2626; color: #fff; }
+    .riassunto { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .riassunto .carta { padding: 12px; }
+    .riassunto .etichetta { font-size: 12px; color: var(--tenue); font-weight: 700; }
+    .riassunto .valore { font-size: 16px; font-weight: 800; margin-top: 4px; }
+    .barra { height: 7px; border-radius: 9px; background: #e2e8f0; margin-top: 8px; overflow: hidden; }
+    .barra div { height: 100%; background: #16a34a; border-radius: 9px; transition: width .3s; }
+    .notifiche { display: flex; flex-direction: column; gap: 8px; }
+    .notifica { display: flex; gap: 10px; align-items: center; background: var(--carta); border-radius: 14px; padding: 10px 12px; }
+    .notifica.allarme { background: #fee2e2; }
+    .notifica.avviso { background: #fef3c7; }
+    .notifica.ok { background: #f0fdf4; }
+    .notifica .icona { font-size: 20px; }
+    .notifica .testo { flex: 1; font-size: 13.5px; font-weight: 600; }
+    .notifica .ora { font-size: 12px; color: var(--tenue); }
+
+    /* ---------- calendario ---------- */
+    .evento { display: flex; align-items: center; gap: 10px; background: var(--carta); border-radius: 16px; padding: 12px; margin-bottom: 8px; }
+    .evento.fatto { opacity: .6; }
+    .evento .orario { font-weight: 800; font-size: 15px; width: 46px; font-variant-numeric: tabular-nums; }
+    .evento .corpo { flex: 1; min-width: 0; }
+    .evento .titolo { font-weight: 700; font-size: 15px; }
+    .evento.fatto .titolo { text-decoration: line-through; }
+    .evento .dettaglio { font-size: 12.5px; color: var(--tenue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .evento .stato { font-size: 12px; font-weight: 700; margin-top: 2px; }
+    .stato.verde { color: #16a34a; } .stato.arancio { color: #d97706; } .stato.grigio { color: var(--tenue); }
+    .spunta { width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid #cbd5e1; background: #fff; font-size: 16px; color: #fff; flex-shrink: 0; }
+    .spunta.si { background: #16a34a; border-color: #16a34a; }
+    .elimina { border: 0; background: none; color: #94a3b8; font-size: 18px; padding: 4px; }
+    .bottone { border: 0; border-radius: 14px; padding: 13px 16px; font-size: 15px; font-weight: 800; }
+    .bottone.primario { background: var(--brand); color: #fff; }
+    .bottone.chiaro { background: var(--carta); color: #0f172a; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .bottone.pieno { width: 100%; }
+    .modulo { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    .riga { display: flex; gap: 10px; }
+    .campo { display: flex; flex-direction: column; gap: 4px; flex: 1; font-size: 12px; font-weight: 700; color: var(--tenue); }
+    .campo input, .campo select { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 11px; font-size: 15px; color: #0f172a; background: #fff; }
+    .segmenti { display: flex; background: #eef2f4; border-radius: 12px; padding: 4px; }
+    .segmenti button { flex: 1; border: 0; border-radius: 9px; padding: 9px; background: transparent; font-weight: 700; color: var(--tenue); }
+    .segmenti button.attivo { background: #fff; color: #0f172a; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+
+    /* ---------- video e mappa ---------- */
+    .schermo-video { position: relative; aspect-ratio: 4 / 3; border-radius: 18px; overflow: hidden; background: #111827; }
+    .schermo-video video { width: 100%; height: 100%; object-fit: cover; }
+    .vuoto { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #cbd5e1; padding: 20px; font-size: 14px; background: radial-gradient(circle at 50% 40%, #1f2937, #0b1220); }
+    .vuoto .grande { font-size: 40px; display: block; margin-bottom: 6px; }
+    .etichetta-video { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 99px; }
+    .etichetta-video .rec { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; margin-right: 5px; animation: lampeggia 1s infinite; }
+    @keyframes lampeggia { 50% { opacity: .3; } }
+    .mappa { width: 100%; display: block; margin-top: 12px; }
+    .mappa .stanza rect { fill: #fff; stroke: #cbd5e1; stroke-width: 2; cursor: pointer; transition: fill .2s; }
+    .mappa .stanza.scelta rect { fill: #ccfbf1; stroke: var(--brand); stroke-width: 3; }
+    .mappa .stanza text { font-size: 12px; font-weight: 700; fill: #334155; pointer-events: none; }
+    .mappa .stanza .icona-cam { font-size: 11px; }
+    .mappa .posizione { fill: #ef4444; }
+    .mappa .alone { fill: #ef4444; opacity: .25; animation: alone 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+    @keyframes alone { from { transform: scale(.6); opacity: .5; } to { transform: scale(2.2); opacity: 0; } }
+    .interruttore { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; font-size: 14px; font-weight: 600; }
+    .interruttore input { width: 44px; height: 24px; accent-color: var(--brand); }
+    .nota { font-size: 12.5px; color: var(--tenue); margin: 8px 4px 0; }
+
+    /* ---------- micro ---------- */
+    .parla-zona { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 0 8px; }
+    .bottone-parla {
+      width: 150px; height: 150px; border-radius: 50%; border: 0;
+      background: linear-gradient(160deg, #f97316, #c2410c); color: #fff;
+      font-size: 46px; box-shadow: 0 10px 30px rgba(194,65,12,.35); touch-action: none; user-select: none;
+    }
+    .bottone-parla.registra { animation: registra 1s infinite; background: #dc2626; }
+    @keyframes registra { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,.5); } 100% { box-shadow: 0 0 0 26px rgba(220,38,38,0); } }
+    .stato-micro { font-size: 15px; font-weight: 700; text-align: center; min-height: 20px; }
+    .frasi { display: flex; flex-wrap: wrap; gap: 8px; }
+    .frasi button { border: 0; border-radius: 99px; padding: 10px 14px; background: var(--carta); font-size: 13.5px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+    .scrivi { display: flex; gap: 8px; margin-top: 10px; }
+    .scrivi input { flex: 1; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; font-size: 15px; }
+
+    /* ---------- impostazioni ---------- */
+    .livelli { display: flex; flex-direction: column; gap: 8px; }
+    .livello { border: 2px solid transparent; text-align: left; background: var(--carta); border-radius: 16px; padding: 12px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+    .livello.scelto { border-color: var(--brand); background: #f0fdfa; }
+    .livello .nome { font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .livello .fase { font-size: 12px; color: var(--brand); font-weight: 700; }
+    .livello .descrizione { font-size: 13px; color: #334155; margin-top: 4px; }
+    .tacche { display: inline-flex; gap: 3px; }
+    .tacche span { width: 8px; height: 8px; border-radius: 2px; background: #cbd5e1; }
+    .tacche span.piena { background: var(--brand); }
+
+    /* ---------- notifica che scende dall'alto ---------- */
+    .banner {
+      position: absolute; z-index: 30; left: 10px; right: 10px; top: 10px;
+      background: rgba(255,255,255,.97); border-radius: 18px; padding: 12px 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18); transform: translateY(-150%); transition: transform .35s;
+    }
+    .banner.visibile { transform: translateY(0); }
+    .banner .app-nome { font-size: 11px; font-weight: 800; color: var(--tenue); }
+    .banner .titolo { font-size: 14.5px; font-weight: 800; margin-top: 2px; }
+
+    /* ---------- chiamata in arrivo / allarme ---------- */
+    .sopra {
+      position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px; padding: 30px 24px; text-align: center; color: #fff;
+      animation: entra .25s ease-out;
+    }
+    #chiamata-arrivo { background: linear-gradient(180deg, #134e4a, #0b2f2c); }
+    #allarme-soccorsi { background: linear-gradient(180deg, #ef4444, #991b1b); }
+    .sopra .grande-avatar { width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.15); display: grid; place-items: center; font-size: 54px; font-weight: 800; animation: anello 1.4s infinite; }
+    @keyframes anello { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.45); } 100% { box-shadow: 0 0 0 28px rgba(255,255,255,0); } }
+    .sopra .titolo { font-size: 26px; font-weight: 800; line-height: 1.15; }
+    .sopra .sotto { font-size: 15px; opacity: .85; }
+    .sopra .azioni { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 18px; }
+    .bottone.verde { background: #16a34a; color: #fff; }
+    .bottone.bianco { background: #fff; color: #0f172a; }
+    .bottone.rosso { background: #dc2626; color: #fff; }
+    .durata { font-size: 18px; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ================= HOME / DASHBOARD ================= -->
+  <section class="schermata" id="s-home">
+    <div class="testata">
+      <div>
+        <div class="logo">◉ Accanto</div>
+        <div class="saluto" id="saluto">Ciao Marco</div>
+      </div>
+      <button class="cerchio" data-vai="s-impostazioni" aria-label="Impostazioni">⚙️</button>
+    </div>
+
+    <div class="tessere">
+      <button class="tessera calendario" data-vai="s-calendario">
+        <span class="icona">📅</span>
+        <span><span class="nome">Calendario</span><br><span class="info" id="info-calendario"></span></span>
+      </button>
+      <button class="tessera video" data-vai="s-video">
+        <span class="icona">📹</span><span class="nome">Video</span>
+      </button>
+      <button class="tessera micro" data-vai="s-micro">
+        <span class="icona">🎙️</span><span class="nome">Micro</span>
+      </button>
+    </div>
+
+    <div class="titolo-sezione">Dashboard</div>
+    <div class="carta persona">
+      <div class="avatar" id="avatar">A</div>
+      <div>
+        <div class="persona-nome" id="persona-nome">Anna</div>
+        <div class="persona-dove" id="persona-dove"></div>
+      </div>
+      <div class="pillola ok" id="pillola-stato">Tutto ok</div>
+    </div>
+    <div class="riassunto">
+      <div class="carta">
+        <div class="etichetta">💊 Medicine di oggi</div>
+        <div class="valore" id="medicine-valore"></div>
+        <div class="barra"><div id="medicine-barra"></div></div>
+      </div>
+      <div class="carta">
+        <div class="etichetta">⏭️ Prossimo</div>
+        <div class="valore" id="prossimo-valore"></div>
+      </div>
+    </div>
+
+    <div class="titolo-sezione">Notifiche</div>
+    <div class="notifiche" id="notifiche"></div>
+  </section>
+
+  <!-- ================= CALENDARIO ================= -->
+  <section class="schermata" id="s-calendario" hidden>
+    <div class="testata-sotto">
+      <button class="indietro" data-vai="s-home" aria-label="Indietro">‹</button>
+      <div><h1>Calendario</h1><div class="sotto" id="calendario-data"></div></div>
+    </div>
+
+    <button class="bottone primario pieno" id="mostra-modulo" style="margin-bottom:12px">+ Aggiungi impegno o medicina</button>
+    <div class="carta modulo" id="modulo" hidden>
+      <div class="segmenti" id="tipo-nuovo">
+        <button class="attivo" data-tipo="impegno">📌 Impegno</button>
+        <button data-tipo="medicina">💊 Medicina</button>
+      </div>
+      <div class="riga">
+        <label class="campo" style="flex:0 0 110px">Ora<input type="time" id="nuovo-ora"></label>
+        <label class="campo">Titolo<input id="nuovo-titolo" placeholder="Es. Visita dal medico"></label>
+      </div>
+      <label class="campo">Dettagli (facoltativo)<input id="nuovo-dettaglio" placeholder="Es. 1 compressa dopo pranzo"></label>
+      <div class="riga">
+        <button class="bottone chiaro" id="annulla-nuovo" style="flex:1">Annulla</button>
+        <button class="bottone primario" id="salva-nuovo" style="flex:2">Salva</button>
+      </div>
+    </div>
+
+    <div id="lista-eventi"></div>
+    <p class="nota">Tocca il cerchio per segnare un impegno come fatto o una medicina come presa. Il tablet di <span class="nome-anziano">Anna</span> si aggiorna subito.</p>
+  </section>
+
+  <!-- ================= VIDEO ================= -->
+  <section class="schermata" id="s-video" hidden>
+    <div class="testata-sotto">
+      <button class="indietro" data-vai="s-home" aria-label="Indietro">‹</button>
+      <div><h1>Video</h1><div class="sotto" id="video-dove"></div></div>
+    </div>
+
+    <div class="schermo-video">
+      <video id="video" playsinline muted hidden></video>
+      <div class="vuoto" id="video-vuoto"></div>
+      <div class="etichetta-video" id="etichetta-video"></div>
+    </div>
+
+    <svg class="mappa" id="mappa" viewBox="0 0 340 210" role="img" aria-label="Mappa della casa"></svg>
+
+    <div class="carta interruttore" style="margin-top:10px">
+      <span>Segui <span class="nome-anziano">Anna</span> automaticamente</span>
+      <input type="checkbox" id="segui" checked>
+    </div>
+    <p class="nota">I sensori capiscono in che stanza si trova e il video passa da solo a quella telecamera. Tocca una stanza sulla mappa per cambiarla. In bagno non ci sono telecamere, solo un sensore di presenza.</p>
+  </section>
+
+  <!-- ================= MICRO ================= -->
+  <section class="schermata" id="s-micro" hidden>
+    <div class="testata-sotto">
+      <button class="indietro" data-vai="s-home" aria-label="Indietro">‹</button>
+      <div><h1>Micro</h1><div class="sotto">Parla dall'altoparlante del tablet</div></div>
+    </div>
+
+    <div class="carta parla-zona">
+      <button class="bottone-parla" id="bottone-parla" aria-label="Tieni premuto per parlare">🎙️</button>
+      <div class="stato-micro" id="stato-micro">Tieni premuto per parlare</div>
+    </div>
+
+    <div class="titolo-sezione">Messaggi rapidi</div>
+    <div class="frasi" id="frasi">
+      <button>Arrivo tra 10 minuti</button>
+      <button>Ricordati di bere un bicchiere d'acqua</button>
+      <button>Ti voglio bene</button>
+      <button>Ti chiamo tra poco</button>
+      <button>Va tutto bene, sono qui</button>
+    </div>
+    <div class="scrivi">
+      <input id="testo-libero" placeholder="Scrivi un messaggio da leggere ad alta voce">
+      <button class="bottone primario" id="invia-testo">Invia</button>
+    </div>
+    <p class="nota"><span class="nome-anziano">Anna</span> sente il messaggio dall'altoparlante senza dover rispondere al telefono.</p>
+  </section>
+
+  <!-- ================= IMPOSTAZIONI ================= -->
+  <section class="schermata" id="s-impostazioni" hidden>
+    <div class="testata-sotto">
+      <button class="indietro" data-vai="s-home" aria-label="Indietro">‹</button>
+      <div><h1>Impostazioni</h1><div class="sotto">Come il tablet aiuta <span class="nome-anziano">Anna</span></div></div>
+    </div>
+
+    <div class="titolo-sezione">Livello di autonomia</div>
+    <div class="livelli" id="livelli"></div>
+    <p class="nota">Cambia il modo in cui il tablet parla, ogni quanto ripete i promemoria e cosa succede quando preme il tasto di aiuto.</p>
+
+    <div class="titolo-sezione">Avvisi</div>
+    <div class="carta interruttore">
+      <span>Avvisami se una medicina non viene presa entro 30 minuti</span>
+      <input type="checkbox" id="avvisa-medicine">
+    </div>
+
+    <div class="titolo-sezione">Persone e numeri</div>
+    <div class="carta modulo">
+      <label class="campo">Nome della persona assistita<input id="imp-anziano"></label>
+      <label class="campo">Nome del familiare<input id="imp-familiare"></label>
+      <label class="campo">Numero di emergenza<input id="imp-emergenza" inputmode="tel"></label>
+    </div>
+
+    <button class="bottone chiaro pieno" id="ripristina" style="margin-top:6px">↺ Ripristina i dati della demo</button>
+  </section>
+
+  <!-- ================= NOTIFICA E SCHERMATE SOPRA ================= -->
+  <div class="banner" id="banner">
+    <div class="app-nome">ACCANTO · adesso</div>
+    <div class="titolo" id="banner-titolo"></div>
+  </div>
+
+  <div class="sopra" id="chiamata-arrivo" hidden>
+    <div class="grande-avatar" id="chiamata-avatar">A</div>
+    <div class="titolo" id="chiamata-titolo">Anna ti sta chiamando</div>
+    <div class="sotto" id="chiamata-sotto">dal tablet di casa · ha premuto il tasto di aiuto</div>
+    <div class="durata" id="chiamata-durata"></div>
+    <div class="azioni" id="azioni-arrivo">
+      <button class="bottone verde" id="rispondi">📞 Rispondi</button>
+      <button class="bottone bianco" id="sto-arrivando">🚗 Sto arrivando</button>
+    </div>
+    <div class="azioni" id="azioni-incorso" hidden>
+      <button class="bottone bianco" id="chiamata-video">📹 Guarda la casa</button>
+      <button class="bottone rosso" id="chiudi-chiamata">Chiudi la chiamata</button>
+    </div>
+  </div>
+
+  <div class="sopra" id="allarme-soccorsi" hidden>
+    <div class="grande-avatar">🚑</div>
+    <div class="titolo" id="soccorsi-titolo">Anna ha chiamato i soccorsi</div>
+    <div class="sotto" id="soccorsi-sotto"></div>
+    <div class="azioni">
+      <button class="bottone bianco" id="soccorsi-video">📹 Guarda la casa</button>
+      <button class="bottone verde" id="soccorsi-micro">🎙️ Parla con lei</button>
+      <button class="bottone rosso" id="soccorsi-ok">Ho capito</button>
+    </div>
+  </div>
+</div>
+
+<script src="stato.js"></script>
+<script>
+  const A = window.Accanto;
+  const $ = (id) => document.getElementById(id);
+  const nomeA = () => A.stato.nomeAnziano;
+  const nomeF = () => A.stato.nomeFamiliare;
+
+  // ================= SUONI =================
+  let audio = null;
+  function sbloccaAudio() {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+  }
+  document.addEventListener('pointerdown', sbloccaAudio);
+  function nota(frequenza, inizio, durata, volume = 0.12) {
+    if (!audio || audio.state !== 'running') return;
+    const osc = audio.createOscillator();
+    const g = audio.createGain();
+    osc.frequency.value = frequenza;
+    const t = audio.currentTime + inizio;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(volume, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + durata);
+    osc.connect(g).connect(audio.destination);
+    osc.start(t);
+    osc.stop(t + durata + 0.02);
+  }
+  function ding() { nota(880, 0, 0.25); nota(1320, 0.16, 0.3); }
+  let timerSuoneria;
+  function suoneria(attiva) {
+    clearInterval(timerSuoneria);
+    if (!attiva) return;
+    const squillo = () => { nota(740, 0, 0.35); nota(988, 0.4, 0.35); };
+    squillo();
+    timerSuoneria = setInterval(squillo, 1800);
+  }
+
+  // ================= NAVIGAZIONE =================
+  let schermataAttuale = 's-home';
+  function vai(id) {
+    document.querySelectorAll('.schermata').forEach((s) => { s.hidden = s.id !== id; });
+    if (schermataAttuale === 's-video' && id !== 's-video') spegniVideo();
+    schermataAttuale = id;
+    if (id === 's-video') aggiornaVideo();
+    if (id === 's-calendario') disegnaCalendario();
+    if (id === 's-impostazioni') disegnaImpostazioni();
+  }
+  document.addEventListener('click', (e) => {
+    const bottone = e.target.closest('[data-vai]');
+    if (bottone) vai(bottone.dataset.vai);
+  });
+
+  // ================= DASHBOARD =================
+  let ultimaNotifica = null;
+  function disegnaHome() {
+    const s = A.stato;
+    $('saluto').textContent = `Ciao ${nomeF()}`;
+    $('avatar').textContent = nomeA().charAt(0);
+    $('persona-nome').textContent = nomeA();
+    document.querySelectorAll('.nome-anziano').forEach((el) => { el.textContent = nomeA(); });
+    $('persona-dove').textContent = `📍 ${A.STANZE[s.stanza].nome}`;
+
+    const medicine = s.eventi.filter((e) => e.tipo === 'medicina');
+    const prese = medicine.filter((e) => e.fatto).length;
+    $('medicine-valore').textContent = `${prese} di ${medicine.length} prese`;
+    $('medicine-barra').style.width = medicine.length ? `${(prese / medicine.length) * 100}%` : '0%';
+
+    const prossimo = A.prossimoEvento();
+    $('prossimo-valore').textContent = prossimo ? `${prossimo.ora} · ${prossimo.titolo}` : 'Niente oggi';
+    const daFare = s.eventi.filter((e) => !e.fatto).length;
+    $('info-calendario').textContent = `${s.eventi.length} impegni oggi · ${daFare} da fare`;
+
+    const pillola = $('pillola-stato');
+    const ultima = s.storico[0];
+    if (ultima && ultima.tono === 'allarme') { pillola.className = 'pillola allarme'; pillola.textContent = 'Richiesta di aiuto'; }
+    else if (ultima && ultima.tono === 'avviso') { pillola.className = 'pillola avviso'; pillola.textContent = 'Attenzione'; }
+    else if (A.medicinaDaPrendere()) { pillola.className = 'pillola avviso'; pillola.textContent = 'Medicina da prendere'; }
+    else { pillola.className = 'pillola ok'; pillola.textContent = 'Tutto ok'; }
+
+    $('notifiche').innerHTML = '';
+    s.storico.slice(0, 15).forEach((n) => {
+      const riga = document.createElement('div');
+      riga.className = `notifica ${n.tono || ''}`;
+      riga.innerHTML = '<span class="icona"></span><span class="testo"></span><span class="ora"></span>';
+      riga.querySelector('.icona').textContent = n.icona;
+      riga.querySelector('.testo').textContent = n.testo;
+      riga.querySelector('.ora').textContent = n.ora;
+      $('notifiche').appendChild(riga);
+    });
+
+    // notifica che scende dall'alto per le novità arrivate dal tablet
+    const chiave = ultima ? ultima.ora + ultima.testo : null;
+    if (ultimaNotifica !== null && chiave !== ultimaNotifica && ultima && ultima.tono) {
+      mostraBanner(`${ultima.icona} ${ultima.testo}`);
+    }
+    ultimaNotifica = chiave;
+  }
+
+  let timerBanner;
+  function mostraBanner(testo) {
+    $('banner-titolo').textContent = testo;
+    $('banner').classList.add('visibile');
+    ding();
+    clearTimeout(timerBanner);
+    timerBanner = setTimeout(() => $('banner').classList.remove('visibile'), 4000);
+  }
+
+  // ================= CALENDARIO =================
+  let tipoNuovo = 'impegno';
+  function disegnaCalendario() {
+    const d = new Date();
+    $('calendario-data').textContent = 'Oggi, ' + d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+    const adesso = A.minutiAdesso();
+    $('lista-eventi').innerHTML = '';
+    A.eventiOrdinati().forEach((e) => {
+      const riga = document.createElement('div');
+      riga.className = 'evento' + (e.fatto ? ' fatto' : '');
+      let stato;
+      if (e.fatto) stato = ['verde', e.tipo === 'medicina' ? `Presa alle ${e.fattoAlle}` : `Fatto alle ${e.fattoAlle}`];
+      else if (A.minuti(e.ora) <= adesso) stato = ['arancio', e.tipo === 'medicina' ? 'Da prendere adesso' : 'In corso'];
+      else stato = ['grigio', 'Più tardi'];
+      riga.innerHTML = `
+        <div class="orario"></div>
+        <div class="corpo"><div class="titolo"></div><div class="dettaglio"></div><div class="stato ${stato[0]}"></div></div>
+        <button class="spunta ${e.fatto ? 'si' : ''}" aria-label="Segna come fatto">${e.fatto ? '✓' : ''}</button>
+        <button class="elimina" aria-label="Elimina">✕</button>`;
+      riga.querySelector('.orario').textContent = e.ora;
+      riga.querySelector('.titolo').textContent = (e.tipo === 'medicina' ? '💊 ' : '') + e.titolo;
+      riga.querySelector('.dettaglio').textContent = e.dettaglio || '';
+      riga.querySelector('.stato').textContent = stato[1];
+      riga.querySelector('.spunta').onclick = () => {
+        A.segnaFatto(e.id, !e.fatto);
+        if (!e.fatto) A.registra('✔️', `Hai segnato «${e.titolo}» come ${e.tipo === 'medicina' ? 'presa' : 'fatto'}`);
+      };
+      riga.querySelector('.elimina').onclick = () => {
+        A.aggiorna((s) => { s.eventi = s.eventi.filter((x) => x.id !== e.id); });
+      };
+      $('lista-eventi').appendChild(riga);
+    });
+  }
+  $('mostra-modulo').onclick = () => {
+    const tra30 = new Date(Date.now() + 30 * 60000);
+    $('nuovo-ora').value = A.hhmm(tra30);
+    $('nuovo-titolo').value = '';
+    $('nuovo-dettaglio').value = '';
+    $('modulo').hidden = false;
+    $('mostra-modulo').hidden = true;
+    $('nuovo-titolo').focus();
+  };
+  $('annulla-nuovo').onclick = () => { $('modulo').hidden = true; $('mostra-modulo').hidden = false; };
+  $('tipo-nuovo').onclick = (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    tipoNuovo = b.dataset.tipo;
+    $('tipo-nuovo').querySelectorAll('button').forEach((x) => x.classList.toggle('attivo', x === b));
+  };
+  $('salva-nuovo').onclick = () => {
+    const titolo = $('nuovo-titolo').value.trim();
+    const ora = $('nuovo-ora').value;
+    if (!titolo || !ora) { $('nuovo-titolo').focus(); return; }
+    A.aggiorna((s) => {
+      s.eventi.push({ id: 'e' + Date.now(), tipo: tipoNuovo, titolo, dettaglio: $('nuovo-dettaglio').value.trim(), ora, fatto: false, fattoAlle: null });
+    });
+    A.registra(tipoNuovo === 'medicina' ? '💊' : '📌', `Aggiunto: ${titolo} alle ${ora}`);
+    $('modulo').hidden = true;
+    $('mostra-modulo').hidden = false;
+  };
+
+  // ================= VIDEO =================
+  let stanzaVista = A.stato.stanza;
+  let flussoVideo = null;
+  function disegnaMappa() {
+    const pezzi = [
+      ['soggiorno', 0, 0, 190, 115],
+      ['cucina', 190, 0, 150, 115],
+      ['camera', 0, 115, 140, 95],
+      ['bagno', 140, 115, 80, 95],
+      ['ingresso', 220, 115, 120, 95],
+    ];
+    const qui = A.stato.stanza;
+    let svg = '';
+    pezzi.forEach(([id, x, y, w, h]) => {
+      const st = A.STANZE[id];
+      svg += `<g class="stanza ${id === stanzaVista ? 'scelta' : ''}" data-stanza="${id}">
+        <rect x="${x + 2}" y="${y + 2}" width="${w - 4}" height="${h - 4}" rx="10"></rect>
+        <text x="${x + 12}" y="${y + 22}">${st.nome}</text>
+        <text class="icona-cam" x="${x + w - 24}" y="${y + 22}">${st.telecamera ? '📷' : '🚿'}</text>`;
+      if (id === qui) {
+        svg += `<circle class="alone" cx="${x + w / 2}" cy="${y + h / 2 + 8}" r="9"></circle>
+          <circle class="posizione" cx="${x + w / 2}" cy="${y + h / 2 + 8}" r="9"></circle>
+          <text x="${x + w / 2}" y="${y + h / 2 + 12}" text-anchor="middle" style="fill:#fff;font-size:10px;font-weight:800">${nomeA().charAt(0)}</text>`;
+      }
+      svg += '</g>';
+    });
+    $('mappa').innerHTML = svg;
+  }
+  $('mappa').addEventListener('click', (e) => {
+    const g = e.target.closest('[data-stanza]');
+    if (!g) return;
+    stanzaVista = g.dataset.stanza;
+    $('segui').checked = stanzaVista === A.stato.stanza;
+    aggiornaVideo();
+  });
+  $('segui').onchange = () => { if ($('segui').checked) { stanzaVista = A.stato.stanza; aggiornaVideo(); } };
+
+  async function aggiornaVideo() {
+    if (schermataAttuale !== 's-video') return;
+    disegnaMappa();
+    const st = A.STANZE[stanzaVista];
+    const annaQui = stanzaVista === A.stato.stanza;
+    $('video-dove').textContent = `${nomeA()} è in ${A.STANZE[A.stato.stanza].nome.toLowerCase()}`;
+    $('etichetta-video').innerHTML = `<span class="rec"></span>${st.nome}`;
+
+    if (!st.telecamera) {
+      mostraVuoto('🚿', `Per rispetto della privacy in ${st.nome.toLowerCase()} non c'è una telecamera.<br>Sensore di presenza: ${annaQui ? `<b>${nomeA()} è qui</b>` : 'nessuno'}`);
+      A.invia('video', { attivo: false });
+      return;
+    }
+    if (!annaQui) {
+      mostraVuoto('📷', `${st.nome}: nessuno nella stanza`);
+      A.invia('video', { attivo: false });
+      return;
+    }
+    // la telecamera della stanza dove si trova (nella demo è la webcam del computer)
+    try {
+      if (!flussoVideo) flussoVideo = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      if ($('video').srcObject !== flussoVideo) {
+        $('video').srcObject = flussoVideo;
+        await $('video').play();
+      }
+      $('video').hidden = false;
+      $('video-vuoto').hidden = true;
+      A.invia('video', { attivo: true });
+    } catch (err) {
+      mostraVuoto('⚠️', 'Telecamera non disponibile');
+    }
+  }
+  function mostraVuoto(icona, testo) {
+    $('video').hidden = true;
+    $('video-vuoto').hidden = false;
+    $('video-vuoto').innerHTML = `<div><span class="grande">${icona}</span>${testo}</div>`;
+  }
+  function spegniVideo() {
+    A.invia('video', { attivo: false });
+    if (flussoVideo) { flussoVideo.getTracks().forEach((t) => t.stop()); flussoVideo = null; }
+  }
+
+  // ================= MICRO =================
+  let registratore = null;
+  let pezziAudio = [];
+  let inizioRegistrazione = 0;
+  let timerRegistrazione;
+  async function iniziaRegistrazione() {
+    try {
+      const flusso = await navigator.mediaDevices.getUserMedia({ audio: true });
+      registratore = new MediaRecorder(flusso);
+      pezziAudio = [];
+      registratore.ondataavailable = (e) => { if (e.data.size) pezziAudio.push(e.data); };
+      registratore.onstop = () => {
+        flusso.getTracks().forEach((t) => t.stop());
+        const durata = (Date.now() - inizioRegistrazione) / 1000;
+        if (durata < 0.6) { $('stato-micro').textContent = 'Tieni premuto più a lungo per parlare'; return; }
+        const blob = new Blob(pezziAudio, { type: registratore.mimeType });
+        A.invia('audio', { blob });
+        A.registra('🎙️', `Hai parlato a ${nomeA()} dall'altoparlante (${Math.round(durata)} s)`);
+        $('stato-micro').textContent = `✓ Inviato: ${nomeA()} ti sente dal tablet`;
+      };
+      registratore.start();
+      inizioRegistrazione = Date.now();
+      $('bottone-parla').classList.add('registra');
+      timerRegistrazione = setInterval(() => {
+        $('stato-micro').textContent = `● Sto registrando… ${Math.floor((Date.now() - inizioRegistrazione) / 1000)} s — lascia per inviare`;
+      }, 200);
+    } catch (err) {
+      $('stato-micro').textContent = 'Microfono non consentito';
+    }
+  }
+  function fermaRegistrazione() {
+    clearInterval(timerRegistrazione);
+    $('bottone-parla').classList.remove('registra');
+    if (registratore && registratore.state === 'recording') registratore.stop();
+  }
+  $('bottone-parla').addEventListener('pointerdown', (e) => { e.preventDefault(); iniziaRegistrazione(); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => $('bottone-parla').addEventListener(ev, fermaRegistrazione));
+
+  function inviaFrase(testo) {
+    if (!testo) return;
+    A.invia('frase', { testo });
+    A.registra('💬', `Messaggio a ${nomeA()}: «${testo}»`);
+    $('stato-micro').textContent = `✓ «${testo}» letto ad alta voce sul tablet`;
+  }
+  $('frasi').onclick = (e) => { const b = e.target.closest('button'); if (b) inviaFrase(b.textContent); };
+  $('invia-testo').onclick = () => { inviaFrase($('testo-libero').value.trim()); $('testo-libero').value = ''; };
+  $('testo-libero').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('invia-testo').click(); });
+
+  // ================= IMPOSTAZIONI =================
+  function disegnaImpostazioni() {
+    const s = A.stato;
+    $('livelli').innerHTML = '';
+    Object.entries(A.LIVELLI).forEach(([numero, l]) => {
+      const b = document.createElement('button');
+      b.className = 'livello' + (Number(numero) === s.livello ? ' scelto' : '');
+      const tacche = [1, 2, 3].map((i) => `<span class="${i <= Number(numero) ? 'piena' : ''}"></span>`).join('');
+      b.innerHTML = `<div class="nome"><span class="tacche">${tacche}</span><span class="nome-livello"></span></div><div class="fase"></div><div class="descrizione"></div>`;
+      b.querySelector('.nome-livello').textContent = l.nome;
+      b.querySelector('.fase').textContent = 'Aiuto ' + ['', 'leggero', 'medio', 'massimo'][numero] + ' · ' + l.fase;
+      b.querySelector('.descrizione').textContent = l.descrizione;
+      b.onclick = () => {
+        A.aggiorna((st) => { st.livello = Number(numero); });
+        A.registra('⚙️', `Livello di autonomia impostato: ${l.nome}`);
+        disegnaImpostazioni();
+      };
+      $('livelli').appendChild(b);
+    });
+    $('avvisa-medicine').checked = s.avvisaMedicineNonPrese;
+    $('imp-anziano').value = s.nomeAnziano;
+    $('imp-familiare').value = s.nomeFamiliare;
+    $('imp-emergenza').value = s.numeroEmergenza;
+  }
+  $('avvisa-medicine').onchange = () => A.aggiorna((s) => { s.avvisaMedicineNonPrese = $('avvisa-medicine').checked; });
+  [['imp-anziano', 'nomeAnziano'], ['imp-familiare', 'nomeFamiliare'], ['imp-emergenza', 'numeroEmergenza']].forEach(([id, campo]) => {
+    $(id).addEventListener('change', () => {
+      const valore = $(id).value.trim();
+      if (valore) A.aggiorna((s) => { s[campo] = valore; });
+    });
+  });
+  $('ripristina').onclick = () => { A.ripristina(); disegnaImpostazioni(); };
+
+  // ================= CHIAMATE E ALLARMI DAL TABLET =================
+  let timerDurata;
+  A.on('chiamata', ({ verso }) => {
+    if (verso === 'soccorsi') {
+      $('soccorsi-titolo').textContent = `${nomeA()} ha chiamato i soccorsi`;
+      $('soccorsi-sotto').textContent = `Numero ${A.stato.numeroEmergenza} · alle ${A.hhmm()} · è in ${A.STANZE[A.stato.stanza].nome.toLowerCase()}`;
+      $('allarme-soccorsi').hidden = false;
+      suoneria(true);
+      setTimeout(() => suoneria(false), 6000);
+      return;
+    }
+    $('chiamata-avatar').textContent = nomeA().charAt(0);
+    $('chiamata-titolo').textContent = `${nomeA()} ti sta chiamando`;
+    $('chiamata-sotto').textContent = 'dal tablet di casa · ha premuto il tasto di aiuto';
+    $('chiamata-durata').textContent = '';
+    $('azioni-arrivo').hidden = false;
+    $('azioni-incorso').hidden = true;
+    $('chiamata-arrivo').hidden = false;
+    suoneria(true);
+  });
+  $('rispondi').onclick = () => {
+    suoneria(false);
+    A.invia('chiamata-risposta');
+    $('chiamata-titolo').textContent = `In chiamata con ${nomeA()}`;
+    $('chiamata-sotto').textContent = 'Vivavoce del tablet';
+    $('azioni-arrivo').hidden = true;
+    $('azioni-incorso').hidden = false;
+    const inizio = Date.now();
+    clearInterval(timerDurata);
+    timerDurata = setInterval(() => {
+      const s = Math.floor((Date.now() - inizio) / 1000);
+      $('chiamata-durata').textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    }, 500);
+  };
+  function chiudiChiamata(avvisa) {
+    suoneria(false);
+    clearInterval(timerDurata);
+    $('chiamata-arrivo').hidden = true;
+    if (avvisa) A.invia('chiamata-fine');
+  }
+  $('chiudi-chiamata').onclick = () => { chiudiChiamata(true); A.registra('📞', `Chiamata con ${nomeA()} terminata`); };
+  $('sto-arrivando').onclick = () => {
+    chiudiChiamata(false);
+    A.invia('arrivo');
+    A.registra('🚗', `Hai risposto a ${nomeA()}: sto arrivando`);
+  };
+  $('chiamata-video').onclick = () => { $('chiamata-arrivo').hidden = true; vai('s-video'); };
+  A.on('chiamata-fine', () => chiudiChiamata(false));
+  $('soccorsi-ok').onclick = () => { suoneria(false); $('allarme-soccorsi').hidden = true; };
+  $('soccorsi-video').onclick = () => { suoneria(false); $('allarme-soccorsi').hidden = true; vai('s-video'); };
+  $('soccorsi-micro').onclick = () => { suoneria(false); $('allarme-soccorsi').hidden = true; vai('s-micro'); };
+
+  // ================= AGGIORNAMENTI =================
+  function aggiornaTutto() {
+    disegnaHome();
+    if (schermataAttuale === 's-calendario') disegnaCalendario();
+    if (schermataAttuale === 's-video') {
+      if ($('segui').checked) stanzaVista = A.stato.stanza;
+      aggiornaVideo();
+    }
+  }
+  A.on('stato', aggiornaTutto);
+  setInterval(aggiornaTutto, 30000);
+  disegnaHome();
+</script>
+</body>
+</html>

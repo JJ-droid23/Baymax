@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accanto – il prodotto</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: clip; }
+    body {
+      font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(ellipse at top, #22303a, #12151a 65%);
+      color: #cbd5e1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    button { font-family: inherit; cursor: pointer; }
+    .palco { display: flex; align-items: center; gap: 70px; padding: 30px 40px 90px; transform-origin: center; }
+    .colonna { display: flex; flex-direction: column; align-items: center; }
+    .etichetta { font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: #94a3b8; margin-bottom: 16px; }
+
+    /* tablet orizzontale con il tasto fisico nella cornice */
+    .tablet {
+      position: relative; padding: 26px 26px 92px; border-radius: 40px;
+      background: #1a1c20; box-shadow: 0 0 0 2px #30333a, 0 40px 90px rgba(0,0,0,.55);
+    }
+    .tablet::before { content: ""; position: absolute; top: 11px; left: 50%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: #2c3038; }
+    .tablet iframe { display: block; width: 1024px; height: 640px; border: 0; border-radius: 14px; background: #fbf7ef; }
+    .tasto-fisico {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      width: 62px; height: 62px; border-radius: 50%; border: 5px solid #2c3038;
+      background: radial-gradient(circle at 40% 35%, #f87171, #b91c1c);
+      box-shadow: 0 4px 14px rgba(220,38,38,.5);
+    }
+    .tasto-fisico:active { transform: translateX(-50%) scale(.92); }
+    .nota-tasto { position: absolute; bottom: 34px; left: calc(50% + 46px); font-size: 12px; color: #6b7280; }
+
+    /* telefono */
+    .telefono {
+      padding: 12px; border-radius: 54px; background: #0b0b0d;
+      box-shadow: 0 0 0 2px #2a2d33, 0 30px 80px rgba(0,0,0,.55);
+    }
+    .telefono iframe { display: block; width: 390px; height: 780px; border: 0; border-radius: 42px; background: #f4f7f8; }
+
+    /* barra del presentatore */
+    .regia {
+      position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+      padding: 8px 10px; border-radius: 14px; background: rgba(15,23,42,.8);
+      font-size: 13px; transition: opacity .2s;
+    }
+    .regia.nascosta { opacity: 0; pointer-events: none; }
+    .regia button { border: 0; border-radius: 9px; padding: 7px 11px; background: #1e293b; color: #e2e8f0; font-size: 13px; }
+    .regia button.attiva { background: #0f766e; }
+    .regia .separa { width: 1px; height: 20px; background: #334155; margin: 0 4px; }
+    .regia .tenue { color: #64748b; }
+  </style>
+</head>
+<body>
+  <main class="palco" id="palco">
+    <div class="colonna">
+      <div class="etichetta">Tablet di <span class="nome-anziano">Anna</span> · casa</div>
+      <div class="tablet">
+        <iframe src="tablet.html?vetrina=1" title="Tablet dell'anziano" allow="microphone; camera; autoplay"></iframe>
+        <button class="tasto-fisico" id="tasto-fisico" aria-label="Tasto fisico di aiuto"></button>
+        <span class="nota-tasto">tasto di aiuto</span>
+      </div>
+    </div>
+    <div class="colonna">
+      <div class="etichetta">App di <span class="nome-familiare">Marco</span> · telefono</div>
+      <div class="telefono">
+        <iframe src="familiare.html" title="App del familiare" allow="microphone; camera; autoplay"></iframe>
+      </div>
+    </div>
+  </main>
+
+  <nav class="regia" id="regia">
+    <span class="tenue"><span class="nome-anziano">Anna</span> va in:</span>
+    <span id="stanze"></span>
+    <span class="separa"></span>
+    <button id="ripristina">↺ Ripristina demo</button>
+    <span class="tenue">· H nasconde la barra</span>
+  </nav>
+
+  <script src="stato.js"></script>
+  <script>
+    const A = window.Accanto;
+    const $ = (id) => document.getElementById(id);
+
+    // adatta tablet e telefono a qualsiasi schermo o proiettore
+    function adatta() {
+      const palco = $('palco');
+      palco.style.transform = 'none';
+      const scala = Math.min(window.innerWidth / palco.offsetWidth, window.innerHeight / palco.offsetHeight);
+      palco.style.transform = `scale(${scala})`;
+    }
+    window.addEventListener('resize', adatta);
+    adatta();
+
+    // il tasto fisico del tablet
+    $('tasto-fisico').onclick = () => A.invia('tasto-fisico');
+
+    // barra del presentatore: simula i sensori che capiscono in che stanza è
+    function disegnaRegia() {
+      document.querySelectorAll('.nome-anziano').forEach((el) => { el.textContent = A.stato.nomeAnziano; });
+      document.querySelectorAll('.nome-familiare').forEach((el) => { el.textContent = A.stato.nomeFamiliare; });
+      $('stanze').innerHTML = '';
+      Object.entries(A.STANZE).forEach(([id, st]) => {
+        const b = document.createElement('button');
+        b.textContent = st.nome;
+        b.className = id === A.stato.stanza ? 'attiva' : '';
+        b.style.marginRight = '4px';
+        b.onclick = () => {
+          A.aggiorna((s) => { s.stanza = id; });
+          A.registra('📍', `${A.stato.nomeAnziano} è entrata in ${st.nome.toLowerCase()}`);
+        };
+        $('stanze').appendChild(b);
+      });
+    }
+    A.on('stato', disegnaRegia);
+    disegnaRegia();
+    $('ripristina').onclick = () => { A.ripristina(); location.reload(); };
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'h') $('regia').classList.toggle('nascosta');
+      if (e.code === 'Space') { e.preventDefault(); A.invia('tasto-fisico'); }
+    });
+  </script>
+</body>
+</html>
