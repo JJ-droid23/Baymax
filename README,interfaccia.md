@@ -1,4 +1,4 @@
-# Baymax — Accanto
+# Baymax
 
 Sistema di assistenza per anziani che vivono da soli, anche con demenza.
 Il progetto ha due parti:
